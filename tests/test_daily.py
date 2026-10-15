@@ -25,6 +25,20 @@ def test_parse_nasdaq_calendar():
     assert parse_nasdaq_calendar({"data": {"rows": None}}, D(2026, 10, 17)).empty
 
 
+def test_parse_past_calendar_fields():
+    cal = parse_nasdaq_calendar(_payload([
+        {"symbol": "TSLA", "time": "time-not-supplied", "marketCap": "$1,450,115,860,000",
+         "eps": "$0.37", "surprise": "-9.76", "epsForecast": "$0.41", "noOfEsts": "11"},
+        {"symbol": "LOSS", "time": "time-not-supplied", "marketCap": "$5,000,000,000",
+         "eps": "($0.12)", "surprise": "N/A", "epsForecast": "-$0.10", "noOfEsts": "3"},
+    ]), D(2025, 10, 22))
+    t = cal.set_index("symbol")
+    assert t.loc["TSLA", "surprise_pct"] == -9.76 and t.loc["TSLA", "n_estimates"] == 11
+    assert t.loc["LOSS", "eps"] == -0.12 and t.loc["LOSS", "eps_forecast"] == -0.10
+    assert pd.isna(t.loc["LOSS", "surprise_pct"])
+    assert not cal["usable"].any()
+
+
 def _cal(rows, date):
     return parse_nasdaq_calendar(_payload(rows), date)
 

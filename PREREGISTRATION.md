@@ -6,9 +6,12 @@ and tagging `prereg-v1`. Any change after that is a new version with its own tag
 ## Hypotheses
 
 - **H1 (primary, earnings arena).** In the regression
-  `|r_i| = a + b_model · F_model,i + b_imp · IM_i + e_i`,
-  where `|r_i|` is the realized absolute move, `F_model` the scaffold forecast and `IM` the implied move,
-  `b_model ≠ 0` at the 5% level with standard errors clustered by announcement date, on held-out seasons.
+  `|r_i| = a + b_model · F_model,i + b_imp · IM_i + b_tr · F_trailing,i + e_i`,
+  where `|r_i|` is the realized absolute move, `F_model` the scaffold forecast, `IM` the implied move
+  and `F_trailing` the trailing mean absolute move, `b_model > 0` at the 5% level with standard
+  errors clustered by announcement date, on held-out seasons.
+  *Narrowed 2026-10-15 (docs/prior-art.md):* that trailing moves add information beyond the implied
+  move is already published, so the benchmark includes both.
 - **H2 (secondary).** Area under the risk-coverage curve (QLIKE loss) for the scaffold with gates is lower
   than for the best baseline, on held-out seasons.
 - **H3 (exploratory, control arena).** Scaffold features add information to HAR-IV for S&P 500
@@ -19,6 +22,10 @@ and tagging `prereg-v1`. Any change after that is a new version with its own tag
 - Before-open announcement on day D: pre-event close = close of D−1; post-event close = close of D.
 - After-close announcement on day D: pre-event close = close of D; post-event close = close of D+1.
 - Unknown or unconfirmed timing: excluded and counted.
+- Retrospective seasons: Nasdaq's past calendar has no timing flag, so timing is inferred from the
+  larger overnight gap (close D−1 → open D vs close D → open D+1) and flagged `inferred`. The rule's
+  accuracy is measured on forward events with recorded timing before it is used; inferred-timing
+  events are reported separately.
 - Realized move: `|post / pre − 1|`.
 - Implied move: at-the-money straddle mid / spot at the pre-event close, using the first expiry after
   the event; secondary definition strips residual time value using two expiries (`events/` GOAL.md).

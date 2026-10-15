@@ -63,21 +63,27 @@ def mincer_zarnowitz(y, f, cluster=None, hac_lags: int | None = None) -> dict:
 
 
 def encompassing(y, f_model, f_benchmark, cluster=None, hac_lags: int | None = None,
-                 alpha: float = 0.05) -> dict:
-    """y = a + b_model * f_model + b_bench * f_benchmark + e.
+                 alpha: float = 0.05, controls: dict | None = None) -> dict:
+    """y = a + b_model * f_model + b_bench * f_benchmark + sum_k c_k * control_k + e.
 
-    The model adds information beyond the benchmark if b_model is significantly nonzero.
+    The model adds information beyond the benchmark (and any controls, e.g. the trailing move
+    for the narrowed H1) if b_model is significantly positive.
     """
-    res, n, nc = _ols(y, {"model": f_model, "benchmark": f_benchmark}, cluster, hac_lags)
-    return {
+    regs = {"model": f_model, "benchmark": f_benchmark, **(controls or {})}
+    res, n, nc = _ols(y, regs, cluster, hac_lags)
+    out = {
         "b_model": float(res.params["model"]),
         "se_model": float(res.bse["model"]),
         "p_model": float(res.pvalues["model"]),
         "b_benchmark": float(res.params["benchmark"]),
         "se_benchmark": float(res.bse["benchmark"]),
         "p_benchmark": float(res.pvalues["benchmark"]),
-        "adds_information": bool(res.pvalues["model"] < alpha),
+        "adds_information": bool(res.pvalues["model"] < alpha and res.params["model"] > 0),
         "r2": float(res.rsquared),
         "n": n,
         "n_clusters": nc,
     }
+    for k in controls or {}:
+        out[f"b_{k}"] = float(res.params[k])
+        out[f"p_{k}"] = float(res.pvalues[k])
+    return out

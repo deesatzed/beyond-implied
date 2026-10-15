@@ -48,6 +48,10 @@ def test_encompassing_detects_extra_information():
     res = encompassing(y, model, implied, cluster=dates)
     assert res["adds_information"] and res["n_clusters"] == n // 10
 
+    trailing = implied + rng.normal(0, 0.02, n)
+    res3 = encompassing(y, model, implied, cluster=dates, controls={"trailing": trailing})
+    assert res3["adds_information"] and "b_trailing" in res3
+
     useless = implied + rng.normal(0, 0.01, n)
     res2 = encompassing(implied + rng.normal(0, 0.005, n), useless, implied, cluster=dates)
     assert not res2["adds_information"]

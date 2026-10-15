@@ -21,13 +21,15 @@ Target: v1 by December 1, 2026.
 
 Sections: `docs/`, `PREREGISTRATION.md`
 
-1. Read the earnings-move predictability literature and the HAR-IV literature. Record each paper's
-   baseline, data, and finding in `docs/prior-art.md` (one row per paper).
-2. Fix the baseline set in `PREREGISTRATION.md`: implied move, trailing 12-event mean absolute move,
+1. [x] Read the earnings-move predictability literature and the HAR-IV literature. Record each paper's
+   baseline, data, and finding in `docs/prior-art.md` (one row per paper). 13 entries, 2026-10-15.
+2. [x] Fix the baseline set in `PREREGISTRATION.md`: implied move, trailing 12-event mean absolute move,
    trailing/implied ratio, HAR-IV (index arena).
-3. Note any existing public result that already answers H1; if one does, narrow the claim.
+3. [x] Note any existing public result that already answers H1; if one does, narrow the claim.
+   Done: trailing moves already known to add information, so H1's benchmark now includes the
+   trailing move. Re-run `bi power` with the three-regressor benchmark in Phase 2.
 
-**Gate:** `docs/prior-art.md` exists with at least 8 entries; baselines named in the pre-registration.
+**Gate:** passed 2026-10-15.
 
 ---
 

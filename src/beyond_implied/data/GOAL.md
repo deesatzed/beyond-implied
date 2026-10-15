@@ -51,7 +51,9 @@ quality problems flagged rather than silently fixed. Bad labels sink this projec
 3. ~~Check Cboe's option `iv` units.~~ Done 2026-10-15: per-contract `iv` is decimal, underlying
    `iv30` is percent. End-to-end check on the live AAPL chain: ATM straddle to the Oct 30 expiry
    implied a 3.8% move with a 5.8% relative spread.
-4. Assemble an earnings calendar CSV for the past year (symbol, date, timing, confirmed) and load it.
+4. Build the past-year calendar from Nasdaq's past dates (dates, EPS, surprise, analyst count are
+   available; the timing flag is not). Infer timing from the larger overnight gap, flag it
+   `inferred`, and measure the rule's accuracy on forward events whose timing was recorded.
 5. Run quality flags over everything; write counts to `report/data_test.md`.
 
 ## Done when

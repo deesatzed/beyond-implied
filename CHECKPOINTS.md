@@ -4,6 +4,34 @@ Newest first. Each checkpoint has a matching git tag `checkpoint-YYYY-MM-DD`.
 
 ---
 
+## 2026-10-15 (night) — Daily collection live; prior art done (Phase 1)
+
+**State:** 56 tests passing. Forward data collection running on the Mac Mini.
+
+**Daily collection**
+- `bi daily` + launchd job `com.deesatzed.beyond-implied.daily`, 16:25 New York, Mon–Fri, from
+  `~/Projects/beyond-implied` on the Mac Mini. Each run pulls the latest code first.
+- External drive rejected: macOS blocks background jobs from reading `/Volumes/WS4TB` without a
+  Full Disk Access grant. A clone remains at `/Volumes/WS4TB/beyond-implied` (unused).
+- First day, 2026-10-15: 27 of 27 selected names captured (pre/post-event closes, ≥ $2B), via a
+  launchd-triggered run that exited 0. Raw data and logs stay out of git.
+
+**Prior art (`docs/prior-art.md`, 13 entries)**
+- H1 narrowed: trailing earnings moves are already known to add information beyond the implied
+  move, so the benchmark is now implied move + trailing move (`encompassing(..., controls=)`).
+- The option market is reported to forecast event magnitude well; a null on H1 is plausible.
+- Literature-backed features proposed for the 6-slot budget: past-move kurtosis/jump frequency,
+  analyst count, market cap, VIX/VIX3M, plus at most one regime feature.
+- Nasdaq's past calendar has dates, EPS, surprise and analyst count but no timing flag; timing for
+  retrospective seasons will be inferred from overnight gaps and validated on forward events.
+
+**Next actions, in order**
+1. Watch the first unattended run (Fri 2026-10-16, 16:25) and its log.
+2. Phase 2: install the ThetaData Terminal on the Mac Mini (needs your account); data test.
+3. Re-run `bi power` with the three-regressor benchmark and real-data parameters.
+
+---
+
 ## 2026-10-15 (evening) — Review items adopted; power analysis done (Phase 1b)
 
 **State:** 52 tests passing, ruff clean. Still no results on real events.

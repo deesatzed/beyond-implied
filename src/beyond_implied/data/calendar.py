@@ -66,16 +66,37 @@ def _money(s) -> float:
     return float(digits) if digits else float("nan")
 
 
+def _signed(s) -> float:
+    """'$1.26' -> 1.26, '-9.76' -> -9.76, '($0.12)' -> -0.12, 'N/A' -> NaN."""
+    if not isinstance(s, str):
+        return float("nan")
+    neg = "(" in s or s.strip().startswith("-") or "-$" in s
+    digits = re.sub(r"[^0-9.]", "", s)
+    if not digits:
+        return float("nan")
+    v = float(digits)
+    return -v if neg else v
+
+
+_CAL_COLS = ["symbol", "date", "timing", "market_cap", "n_estimates", "eps_forecast", "eps",
+             "surprise_pct", "name", "source"]
+
+
 def parse_nasdaq_calendar(payload: dict, date: dt.date) -> pd.DataFrame:
+    """Past dates also return eps and surprise, but no timing flag (see docs/prior-art.md)."""
     rows = ((payload or {}).get("data") or {}).get("rows") or []
     df = pd.DataFrame([{
         "symbol": str(r.get("symbol", "")).strip().upper(),
         "date": pd.Timestamp(date),
         "timing": normalize_timing(r.get("time")),
         "market_cap": _money(r.get("marketCap")),
+        "n_estimates": _money(r.get("noOfEsts")),
+        "eps_forecast": _signed(r.get("epsForecast")),
+        "eps": _signed(r.get("eps")),
+        "surprise_pct": _signed(r.get("surprise")),
         "name": r.get("name"),
         "source": "nasdaq",
-    } for r in rows], columns=["symbol", "date", "timing", "market_cap", "name", "source"])
+    } for r in rows], columns=_CAL_COLS)
     df["usable"] = df["timing"].isin(["BMO", "AMC"])
     return df[df["symbol"] != ""].reset_index(drop=True)
 
