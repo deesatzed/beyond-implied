@@ -67,8 +67,9 @@ Sections: `data/`, `events/`
    against the ~2,000-event power target.
 7. Re-run `bi power` with dispersion, tail shape and date-shock size estimated from the real events.
 
-**In parallel, start now:** run `bi snapshot` daily after the close for the names reporting in the next
-10 trading days. Snapshots cannot be collected after the fact; analysis waits for Phase 3.
+**In parallel, start now:** run `bi daily` after the close on every trading day (launchd on the
+Mac Mini). It snapshots each name on its pre-event and post-event close. Snapshots cannot be
+collected after the fact; analysis waits for Phase 3.
 
 **Gate (stop criteria from GOAL.md):** season averages roughly match ORATS; unusable events ≤ 10–15%;
 a path to ~2,000 usable events exists. If any fails, stop and write up why.

@@ -9,9 +9,11 @@ Units (checked 2026-10-15): per-contract `iv` is decimal (ATM AAPL 0.2346); the 
 from __future__ import annotations
 
 import datetime as dt
+import gzip
 import json
 import re
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import requests
@@ -66,15 +68,21 @@ def parse_chain(payload: dict) -> tuple[pd.DataFrame, dict]:
     return chain, underlying
 
 
+def market_date() -> dt.date:
+    """Today's date in New York (the exchange's calendar day)."""
+    return dt.datetime.now(ZoneInfo("America/New_York")).date()
+
+
 def snapshot(symbol: str, *, out_dir: Path | None = None,
              session: requests.Session | None = None) -> tuple[Path, dict]:
-    """Save today's raw chain to data/raw/cboe_options/<UTC date>/<SYMBOL>.json with a hash sidecar."""
+    """Save the raw chain to data/raw/cboe_options/<NY date>/<SYMBOL>.json.gz with a hash sidecar."""
     sym = cboe_symbol(symbol)
-    day = dt.datetime.now(dt.UTC).date().isoformat()
-    dest = (out_dir or raw_dir("cboe_options")) / day / f"{sym}.json"
-    _, meta = fetch_and_store(URL.format(symbol=sym), dest, session=session)
+    dest = (out_dir or raw_dir("cboe_options")) / market_date().isoformat() / f"{sym}.json.gz"
+    _, meta = fetch_and_store(URL.format(symbol=sym), dest, session=session, compress=True)
     return dest, meta
 
 
 def load_snapshot(path: str | Path) -> tuple[pd.DataFrame, dict]:
-    return parse_chain(json.loads(Path(path).read_text()))
+    p = Path(path)
+    raw = gzip.decompress(p.read_bytes()) if p.suffix == ".gz" else p.read_bytes()
+    return parse_chain(json.loads(raw))

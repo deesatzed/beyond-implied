@@ -28,7 +28,13 @@ quality problems flagged rather than silently fixed. Bad labels sink this projec
   Verified reachable 2026-10-15.
 - `cboe_options.py`: daily raw snapshot with hash sidecar; parser for OCC option symbols into
   `root, expiry, cp, strike` plus quote fields. Verified reachable 2026-10-15 (AAPL: 3,508 contracts).
-- `calendar.py`: CSV loader that normalizes timing labels to `BMO` / `AMC` / `UNKNOWN`.
+- `calendar.py`: CSV loader that normalizes timing labels to `BMO` / `AMC` / `UNKNOWN`, plus the
+  Nasdaq public calendar (one day per request, raw response kept with an as-of timestamp).
+- `market_calendar.py`: NYSE trading days with 2026–2027 holidays.
+- `daily.py` (`bi daily`): after the close, snapshots every name whose pre-event close (AMC today,
+  BMO next trading day) or post-event close (BMO today, AMC previous day) is today, plus UNKNOWN
+  timing for today/tomorrow; market cap ≥ $2B; ≤ 250 names; gzipped; run log in `_run.json`.
+  First live run 2026-10-15: calendar rows 27/15/17 (today/next/prev); TSM, SCHW, PLD, HDB captured.
 - `quality.py`: quote flags and universe filter.
 - `thetadata.py`: interface only.
 

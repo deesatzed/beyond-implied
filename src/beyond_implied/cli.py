@@ -48,6 +48,29 @@ def _cmd_ledger(args) -> int:
     return 2
 
 
+def _cmd_daily(args) -> int:
+    from .data.daily import run_daily
+
+    log = run_daily(min_market_cap=args.min_cap, max_names=args.max_names, pause=args.pause)
+    summary = {k: v for k, v in log.items() if k not in ("snapshots", "failed")}
+    summary["n_ok"] = len(log.get("snapshots", []))
+    summary["n_failed"] = len(log.get("failed", []))
+    print(json.dumps(summary))
+    return 0 if not log.get("failed") else 1
+
+
+def _cmd_calendar(args) -> int:
+    import datetime as dt
+
+    from .data.calendar import fetch_nasdaq_calendar
+
+    cal = fetch_nasdaq_calendar(dt.date.fromisoformat(args.date))
+    cal = cal[cal["market_cap"] >= args.min_cap].sort_values("market_cap", ascending=False)
+    print(cal[["symbol", "timing", "market_cap", "name"]].to_string(index=False))
+    print(f"{len(cal)} names; timing: {cal['timing'].value_counts().to_dict()}")
+    return 0
+
+
 def _cmd_power(args) -> int:
     from pathlib import Path
 
@@ -86,6 +109,17 @@ def main(argv: list[str] | None = None) -> int:
     pl.add_argument("files", nargs="*", help="verify: ledger path; prereg: files to hash")
     pl.add_argument("--path", help="ledger path (default ledger/predictions.jsonl)")
     pl.set_defaults(func=_cmd_ledger)
+
+    pd_ = sub.add_parser("daily", help="after the close: snapshot names with a pre/post-event close today")
+    pd_.add_argument("--min-cap", type=float, default=2e9)
+    pd_.add_argument("--max-names", type=int, default=250)
+    pd_.add_argument("--pause", type=float, default=1.5)
+    pd_.set_defaults(func=_cmd_daily)
+
+    pc = sub.add_parser("calendar", help="show the Nasdaq earnings calendar for a date")
+    pc.add_argument("date", help="YYYY-MM-DD")
+    pc.add_argument("--min-cap", type=float, default=2e9)
+    pc.set_defaults(func=_cmd_calendar)
 
     pp = sub.add_parser("power", help="simulation power analysis for the primary test")
     pp.add_argument("--sims", type=int, default=500)

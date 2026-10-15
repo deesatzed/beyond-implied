@@ -60,6 +60,8 @@ uv pip install -e ".[dev]"
 make test
 bi indices VIX VIX3M VVIX SKEW        # download Cboe daily index history
 bi snapshot AAPL MSFT                 # save today's delayed option chains (raw JSON + hash)
+bi daily                              # after the close: chains for names with a pre/post-event close today
+bi power                              # simulation power analysis for the primary test
 bi ledger verify ledger/predictions.jsonl
 ```
 
