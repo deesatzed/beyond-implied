@@ -43,7 +43,8 @@ def build_events(start: dt.date, end: dt.date, n_names: int = 100, max_dte: int 
     cal = cal[cal["symbol"].isin(universe)].sort_values(["symbol", "date"])
     for k, (sym, evs) in enumerate(cal.groupby("symbol", sort=False), 1):
         try:
-            ohlc = eod_stock_ohlc(sym, start - dt.timedelta(days=14), end + dt.timedelta(days=7))
+            ohlc = eod_stock_ohlc(sym, start - dt.timedelta(days=14),
+                                  min(end + dt.timedelta(days=7), dt.date.today()))
             ohlc = ohlc[ohlc["close"] > 0]
         except Exception as e:  # noqa: BLE001 - record and continue
             fails.append({"symbol": sym, "announce_date": None, "stage": "stock_eod",
@@ -133,6 +134,11 @@ def real_data_parameters(events: pd.DataFrame) -> dict:
 
 def write_report(events: pd.DataFrame, failures: pd.DataFrame, n_names: int) -> Path:
     cfg = universe_config()
+    if events.empty:
+        path = project_root() / "report" / "data_test.md"
+        reasons = failures.groupby(["stage"]).size().to_dict() if len(failures) else {}
+        path.write_text(f"# Phase 2 data test\n\nNo events built. Failures by stage: {reasons}\n")
+        return path
     events = events.copy()
     for c in ("announce_date", "pre_date", "post_date", "expiry_1", "expiry_2"):
         if c in events:

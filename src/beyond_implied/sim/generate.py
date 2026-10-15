@@ -4,7 +4,9 @@ Generative model, per event i on announcement date d (log scale):
 
     v_i  ~ N(0, sd_public)        information the market prices
     x_i  ~ N(0, sd_private)       information only the model has (the planted signal)
-    m_i  = log(base_move) + v_i + x_i          true log expected move
+    t_i  ~ N(0, sd_trailing)      information the market misses but trailing moves capture
+    m_i  = log(base_move) + v_i + x_i + t_i    true log expected move
+    TR_i = exp(log(base_move) + v_i + t_i + n_i)  trailing-move baseline (n_i = averaging noise)
     IM_i = exp(log(base_move) + v_i + premium_s + e_i),  e_i ~ N(0, sd_market_noise)
     F_i  = IM_i * exp(-premium_bar + x_i + f_i),         f_i ~ N(0, sd_model_noise)
     |r_i| = exp(m_i + u_d) * |z_i|,  z_i ~ N(0, 1) scaled so E|z| = 1,  u_d ~ N(0, sd_date)
@@ -39,6 +41,9 @@ class SimConfig:
     premium: float = 0.10
     regime_flip: bool = False         # alternate the premium's sign by season
     catastrophe: bool = False         # one event with a 10x move in the last season
+    trailing_share: float = 0.0       # market-missed info that trailing moves capture (not the model)
+    sd_trailing_noise: float = 0.35   # noise in a 12-event trailing average, log scale
+    z_pool: tuple = ()                # empirical realized/expected shapes to resample (mean ~1)
     seed: int = 0
 
     def with_(self, **kw) -> SimConfig:
@@ -68,10 +73,17 @@ def simulate_events(cfg: SimConfig) -> pd.DataFrame:
     e = rng.normal(0, cfg.sd_market_noise, n)
     f = rng.normal(0, cfg.sd_model_noise, n)
     u = rng.normal(0, cfg.sd_date, n_dates)[date_idx]
-    z = np.abs(rng.standard_normal(n)) * math.sqrt(math.pi / 2.0)  # E|z| = 1
+    if cfg.z_pool:
+        pool = np.asarray(cfg.z_pool, dtype=float)
+        z = rng.choice(pool / pool.mean(), size=n, replace=True)
+    else:
+        z = np.abs(rng.standard_normal(n)) * math.sqrt(math.pi / 2.0)  # E|z| = 1
+    sd_t = private_sd_for_share(cfg.trailing_share, cfg.sd_public) if cfg.trailing_share else 0.0
+    xt = rng.normal(0, sd_t, n) if sd_t > 0 else np.zeros(n)
+    nt = rng.normal(0, cfg.sd_trailing_noise, n)
 
     log_base = math.log(cfg.base_move)
-    true_log = log_base + v + x
+    true_log = log_base + v + x + xt
     realized = np.exp(true_log + u) * z
     if cfg.catastrophe:
         realized[-1] = 10.0 * np.exp(true_log[-1])
@@ -83,6 +95,7 @@ def simulate_events(cfg: SimConfig) -> pd.DataFrame:
         "season": season,
         "implied_move": implied,
         "f_model": implied * np.exp(-premium_bar + x + f),
+        "f_trailing": np.exp(log_base + v + xt + nt),
         "true_expected": np.exp(true_log),
         "realized_move": realized,
     })

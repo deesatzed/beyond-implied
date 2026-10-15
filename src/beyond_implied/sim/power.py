@@ -10,7 +10,7 @@ from .generate import SimConfig, private_sd_for_share, simulate_events
 
 
 def run_scenario(cfg: SimConfig, n_sims: int = 200, alpha: float = 0.05,
-                 cluster_by_date: bool = True) -> dict:
+                 cluster_by_date: bool = True, trailing_control: bool = False) -> dict:
     """Share of simulated studies in which the model is found to add information (b_model > 0).
 
     `cluster_by_date=False` uses heteroskedasticity-robust errors only, to show what ignoring
@@ -20,9 +20,10 @@ def run_scenario(cfg: SimConfig, n_sims: int = 200, alpha: float = 0.05,
     for k in range(n_sims):
         df = simulate_events(cfg.with_(seed=cfg.seed * 100_003 + k))
         res = encompassing(df["realized_move"], df["f_model"], df["implied_move"],
-                           cluster=df["date"] if cluster_by_date else None, alpha=alpha)
+                           cluster=df["date"] if cluster_by_date else None, alpha=alpha,
+                           controls={"trailing": df["f_trailing"]} if trailing_control else None)
         b.append(res["b_model"])
-        hits += res["p_model"] < alpha and res["b_model"] > 0
+        hits += res["adds_information"]
     return {
         "n_events": cfg.n_seasons * cfg.dates_per_season * cfg.events_per_date,
         "n_dates": cfg.n_seasons * cfg.dates_per_season,
@@ -83,4 +84,23 @@ def power_grid(shares=(0.0, 0.02, 0.05, 0.10), seasons=(1, 2, 4), events_per_dat
                                  seed=int(share * 1000) + 10 * s + epd)
                 rows.append({"private_share": share, "seasons": s, "events_per_date": epd,
                              **run_scenario(cfg, n_sims=n_sims)})
+    return pd.DataFrame(rows)
+
+
+def real_data_grid(params: dict, z_pool: tuple, n_sims: int = 300,
+                   shares=(0.0, 0.02, 0.05, 0.10), seasons=(4, 8, 13),
+                   trailing_share: float = 0.05) -> pd.DataFrame:
+    """Power with dispersion, date shocks and move shape taken from the real event table,
+    and the narrowed H1 (trailing move as a control)."""
+    epd = max(2, round(params.get("events_per_date_median", 10)))
+    base = SimConfig(base_move=params["base_move_median"], sd_public=params["sd_log_implied"],
+                     sd_date=params["sd_date_effect"], z_pool=z_pool, events_per_date=epd,
+                     trailing_share=trailing_share)
+    rows = []
+    for share in shares:
+        for s in seasons:
+            cfg = base.with_(sd_private=private_sd_for_share(share, base.sd_public), n_seasons=s,
+                             seed=7000 + int(share * 1000) + s)
+            rows.append({"private_share": share, "seasons": s, "events_per_date": epd,
+                         **run_scenario(cfg, n_sims=n_sims, trailing_control=True)})
     return pd.DataFrame(rows)

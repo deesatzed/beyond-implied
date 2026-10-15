@@ -114,6 +114,29 @@ def _cmd_phase2(args) -> int:
     return 0
 
 
+def _cmd_power_real(args) -> int:
+    """Power grid with parameters and move shapes from the real event table (run where data is)."""
+    from pathlib import Path
+
+    import numpy as np
+    import pandas as pd
+
+    from .config import data_dir, project_root
+    from .sim.power import real_data_grid
+
+    params = json.loads((project_root() / "report" / "data_test" / "real_params.json").read_text())
+    ev = pd.read_csv(data_dir() / "processed" / "events.csv.gz")
+    imp = ev["implied_move_event"].where(ev["implied_move_event"] > 0, ev["implied_move_simple"])
+    ratio = (ev["realized_move"] / imp).replace([np.inf, -np.inf], np.nan).dropna()
+    ratio = ratio[(ratio >= 0) & (ratio < 20)]
+    grid = real_data_grid(params, tuple(ratio.round(6).tolist()), n_sims=args.sims)
+    out = Path(project_root() / "report" / "power")
+    out.mkdir(parents=True, exist_ok=True)
+    grid.to_csv(out / "power_real.csv", index=False)
+    print(grid.to_string(index=False))
+    return 0
+
+
 def _cmd_power(args) -> int:
     from pathlib import Path
 
@@ -177,6 +200,10 @@ def main(argv: list[str] | None = None) -> int:
     p2.add_argument("--symbols", help="comma-separated list instead of the auto universe")
     p2.add_argument("--report-only", action="store_true")
     p2.set_defaults(func=_cmd_phase2)
+
+    pr = sub.add_parser("power-real", help="power grid using real-data parameters (after phase2)")
+    pr.add_argument("--sims", type=int, default=300)
+    pr.set_defaults(func=_cmd_power_real)
 
     pp = sub.add_parser("power", help="simulation power analysis for the primary test")
     pp.add_argument("--sims", type=int, default=500)
