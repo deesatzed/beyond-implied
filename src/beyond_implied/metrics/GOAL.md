@@ -24,6 +24,7 @@ Tables and figures for `report/`; headline numbers written to the ledger in Phas
 | 2nd | `encompassing` | Does the model add information beyond the benchmark? Clustered or HAC errors |
 | 3rd | `pit_uniformity` | Is the predictive distribution calibrated? KS test plus decile counts |
 | 3rd | `kupiec`, `christoffersen` | Do tail breaches happen at the stated rate and not cluster? |
+| 3rd | `conformal_upper` (static, or adaptive with γ > 0) | An upper bound on each move whose coverage adapts when regimes rotate (Gibbs & Candès ACI) |
 | Decision | `risk_coverage`, `aurc`, `risk_at_coverage` | Loss when committing only to the most confident cases |
 | Decision | `straddle_pnl`, `pnl_shape` | Hypothetical straddle P&L judged by skew, expected shortfall, drawdown |
 
@@ -31,8 +32,10 @@ Tables and figures for `report/`; headline numbers written to the ledger in Phas
 
 1. Phase 4: run every second-order metric on baselines (training seasons).
 2. Phase 4: add the Model Confidence Set (the `arch` package has one) for multi-forecast comparison.
-3. Phase 5: produce predictive quantiles (e.g., quantile regression on log moves) for the third-order
-   tests; evaluate held-out seasons once.
+3. Phase 5: produce adaptive conformal upper bounds (γ and window fixed in the pre-registration)
+   and, optionally, quantile-regression quantiles for PIT; evaluate held-out seasons once.
+   Simulation (`report/power.md`): under a ±0.30 premium flip, ACI recovered about half the coverage
+   static conformal lost within a season.
 4. Phase 5: risk-coverage curves for scaffold vs best baseline; straddle P&L net of half-spread.
 
 ## Done when

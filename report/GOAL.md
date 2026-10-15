@@ -13,6 +13,7 @@ pre-registered result whatever its sign, and its failures as plainly as its wins
 
 ## Outputs
 
+- `report/power.md` — simulation power analysis (done 2026-10-15; re-run after Phase 2).
 - `report/data_test.md` — events per season, quality failures by reason, season averages vs ORATS.
 - `report/results.md` — the writeup.
 - `report/figures/` — three figures:

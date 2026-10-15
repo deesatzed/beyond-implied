@@ -44,7 +44,8 @@ src/beyond_implied/
   gates/        expert-system rule layer: commit or abstain, with rule IDs logged
   metrics/      second-order, third-order and decision-level scoring
   ledger/       append-only, hash-chained prediction ledger
-report/         figures and the writeup
+  sim/          planted-signal simulations, power analysis, look-ahead canary
+report/         power analysis, figures and the writeup
 docs/           plan and risk analysis
 tests/
 ```

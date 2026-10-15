@@ -28,6 +28,7 @@ Per event: `perm_entropy`, `dfa_alpha`, `recurrence_rate`, each computed on a fi
 2. Compute features for every event using returns strictly before the pre-event close.
 3. Check feature stability: correlation between adjacent windows; drop any feature that is noise.
 4. Enter at most two regime features into the scaffold model (feature budget is 6 total).
+   They may inform the forecast but never a gate in v1 (enforced by a test).
 5. Report the result whatever its sign. A clean null against HAR-IV and the ratio baseline is a
    contribution: the published literature is mostly in-sample, single-episode studies.
 

@@ -31,6 +31,11 @@ prediction in the ledger.
    report the risk-coverage curve with and without it.
 3. Phase 5: report how often each rule fires, by season. A rule that never fires is dead weight;
    a rule that fires on most events is a universe filter, not a gate.
+4. v1 rule: no regime (chaos/entropy) feature may drive a gate. Early-warning signals false-alarm
+   and can miss real transitions; they earn gate status only through Phase 9.
+   `tests/test_sim_and_conformal.py` enforces this against `config/gates.toml`.
+5. Phase 9 (after v1): rule and threshold changes are challengers promoted only after beating the
+   frozen champion on an unseen season.
 
 ## Done when
 

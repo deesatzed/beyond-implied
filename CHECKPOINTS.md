@@ -4,6 +4,35 @@ Newest first. Each checkpoint has a matching git tag `checkpoint-YYYY-MM-DD`.
 
 ---
 
+## 2026-10-15 (evening) — Review items adopted; power analysis done (Phase 1b)
+
+**State:** 52 tests passing, ruff clean. Still no results on real events.
+
+**From the ARC-GATE review: adopted**
+- Planted-signal simulator, power analysis, stress scenarios, look-ahead canary (`sim/`).
+- Adaptive conformal upper bounds alongside static conformal (`metrics/conformal.py`).
+- Admissibility invariants I1–I11 on the event table (`events/invariants.py`).
+- Champion–challenger promotion after v1 (BUILD.md, Phase 9).
+- Rule: no regime feature drives a gate in v1 (enforced by a test).
+
+**Declined:** methods marketplace, RL and recursive self-improvement, domain pivots (earthquakes,
+reservoirs, electricity, flu), performative prediction, Lyapunov gating. Reason: scope; v1 is due
+2026-12-01.
+
+**Findings (`report/power.md`)**
+- The H1 test keeps its false-positive rate at 2–4% under clustering, premium flips, and a 10× outlier.
+- ~2,000 usable events over ~140 dates → 81% power for a 5% effect. ~400 events → ~25–35%.
+- **Plan change:** 100 names is for the quality test only; the H1 dataset targets ~500 optionable
+  names per season (or more seasons via ThetaData Standard back to 2016).
+- Adaptive conformal recovered about half the coverage lost to a regime flip within a season.
+
+**Next actions, in order**
+1. Daily forward snapshots of names reporting in the next 10 trading days (Nasdaq calendar).
+2. Phase 1: prior-art pass → `docs/prior-art.md`.
+3. Phase 2: install the ThetaData Terminal; data test; go/stop.
+
+---
+
 ## 2026-10-15 — Scaffold complete (Phase 0 done)
 
 **State:** public repo, 2 commits, 43 tests passing, ruff clean. No results yet.

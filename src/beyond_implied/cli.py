@@ -48,6 +48,25 @@ def _cmd_ledger(args) -> int:
     return 2
 
 
+def _cmd_power(args) -> int:
+    from pathlib import Path
+
+    from .sim import adversarial_table, conformal_under_regime_flip, power_grid
+
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    grid = power_grid(n_sims=args.sims)
+    grid.to_csv(out / "power_grid.csv", index=False)
+    adv = adversarial_table(n_sims=args.sims)
+    adv.to_csv(out / "power_adversarial.csv", index=False)
+    conf = conformal_under_regime_flip()
+    conf.to_csv(out / "conformal_regime_flip.csv", index=False)
+    print(grid.to_string(index=False))
+    print(adv.to_string(index=False))
+    print(conf.to_string(index=False))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="bi", description="Beyond Implied")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -67,6 +86,11 @@ def main(argv: list[str] | None = None) -> int:
     pl.add_argument("files", nargs="*", help="verify: ledger path; prereg: files to hash")
     pl.add_argument("--path", help="ledger path (default ledger/predictions.jsonl)")
     pl.set_defaults(func=_cmd_ledger)
+
+    pp = sub.add_parser("power", help="simulation power analysis for the primary test")
+    pp.add_argument("--sims", type=int, default=500)
+    pp.add_argument("--out", default="report/power")
+    pp.set_defaults(func=_cmd_power)
 
     args = p.parse_args(argv)
     return args.func(args)

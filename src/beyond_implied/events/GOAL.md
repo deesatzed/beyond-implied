@@ -33,6 +33,9 @@ post_close, realized_move, quality_ok`.
 - `timing.py`: `pre_post_dates` for BMO/AMC with a trading-day list.
 - `moves.py`: simple implied move, two-expiry event variance, expected absolute move, realized move.
 - `straddle.py`: ATM strike selection and straddle quote from a parsed chain.
+- `invariants.py`: admissibility checks with IDs (I1–I11): timing usable, pre before post, expiry
+  on/after post (and not too far), positive spot/straddle/close, implied move in (0, 1), non-negative
+  realized move and spread; negative event variance is a warning. Errors exclude a row.
 
 ## Build steps (Phase 2)
 
@@ -40,15 +43,17 @@ post_close, realized_move, quality_ok`.
 2. For each calendar event with BMO/AMC timing, locate pre/post dates and closes.
 3. Select first and second expiries after the post date (first within
    `max_days_to_first_expiry`); compute both implied-move definitions.
-4. Attach quality flags; mark `quality_ok` using the universe filter.
+4. Attach quality flags; run `check_events`; mark `quality_ok` using the universe filter and the
+   absence of invariant errors.
 5. Write the table to `data/processed/events.parquet` (gitignored) and season summaries to
    `report/data_test.md`.
 6. Sanity check: season-average implied and realized moves against ORATS's published figures.
 
 ## Done when
 
-- [ ] Event table built for ~100 names over ~4 seasons.
-- [ ] Share of events failing quality is reported, by reason.
+- [ ] Event table built for ~100 names over ~4 seasons (quality test), then scaled toward ~2,000
+      usable events for H1 (`report/power.md`).
+- [ ] Share of events failing quality is reported, by invariant check ID.
 - [ ] Season averages roughly match ORATS.
 - [ ] Unit tests cover BMO/AMC alignment, weekends/holidays, and the variance extraction.
 

@@ -1,0 +1,8 @@
+scenario,n_events,n_dates,reject_rate,b_model_median,n_sims
+"null, date-clustered errors",2100,140,0.02,0.001955530021860892,500
+"null, ignoring same-day correlation",2100,140,0.02,-0.01757494517312795,500
+"null, premium flips sign each season",2100,140,0.032,0.016184359436799446,500
+"null, one 10x catastrophic move",2100,140,0.02,0.002111645609727743,500
+"5% private info, baseline",2100,140,0.838,0.563615028655205,500
+"5% private info, premium flips",2100,140,0.828,0.5816639945470311,500
+"5% private info, one 10x move",2100,140,0.814,0.5701258744173645,500

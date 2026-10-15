@@ -48,6 +48,26 @@ and tagging `prereg-v1`. Any change after that is a new version with its own tag
 - Held-out: the last two retrospective seasons plus the forward-live season.
 - Held-out data is evaluated exactly once.
 
+## Sample size
+
+From the simulation power analysis (`report/power.md`): target ≥ 2,000 usable events over
+≥ 140 announcement dates (80% power for a 5% effect). The achieved count is reported; if it falls
+short, H1 is still run and reported with its power at the achieved size.
+
+## Prediction bounds
+
+Adaptive conformal upper bound on each move (`metrics/conformal.py`), α = 0.10; γ and calibration
+window fixed here in Phase 3. Static conformal is reported as the comparison.
+
+## Gate constraints
+
+No regime (chaos/entropy) feature drives a gate in v1. Gate rules are frozen with this file.
+
 ## Multiple comparisons
 
 Feature list fixed before Phase 5 (at most 6 features). H1 is the only confirmatory test.
+
+## After v1
+
+Changes follow champion–challenger (BUILD.md, Phase 9): pre-registered before an unseen season,
+promoted only if they beat the frozen champion on it.

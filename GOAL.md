@@ -24,6 +24,7 @@ beyond the option market's implied move, and does it know when to abstain?
 
 - Season-average implied and realized moves do not roughly match published ORATS season figures.
 - More than about 10–15% of events fail data-quality checks.
+- No path to roughly 2,000 usable events (the power target in `report/power.md`).
 - The trailing-move / implied ratio already explains the variation and the scaffold adds nothing in-sample.
 
 ## Non-goals

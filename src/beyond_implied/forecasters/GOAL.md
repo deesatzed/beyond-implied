@@ -32,7 +32,8 @@ and the risk-coverage curve. Per month (index arena): HAR-RV and HAR-IV forecast
 
 ## Build steps
 
-1. Phase 4: compute baselines on all events; verify no look-ahead with a test that shuffles future rows.
+1. Phase 4: compute baselines on all events; every feature function must pass
+   `sim.assert_no_lookahead` in the test suite (the trailing baseline already does).
 2. Phase 4: reproduce the ratio effect (direction only) before adding anything.
 3. Phase 5: scaffold model = a small, interpretable regression of log realized move on
    log implied, log trailing, and at most 4 regime/premium features, fit on training seasons only.
@@ -40,6 +41,8 @@ and the risk-coverage curve. Per month (index arena): HAR-RV and HAR-IV forecast
 4. Phase 5: confidence score = predicted |log(f_model / f_implied)| or a calibrated interval width;
    fix the definition in the pre-registration.
 5. Phase 7: HAR-RV and HAR-IV on non-overlapping 21-day windows.
+6. Phase 9 (after v1): model changes are challengers that must beat the frozen champion on a season
+   neither has seen (BUILD.md, Phase 9).
 
 ## Done when
 
