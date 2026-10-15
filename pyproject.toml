@@ -20,6 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5"]
+theta = ["thetadata>=1.0.9"]
 
 [project.scripts]
 bi = "beyond_implied.cli:main"

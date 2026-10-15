@@ -71,6 +71,29 @@ def _cmd_calendar(args) -> int:
     return 0
 
 
+def _cmd_theta_probe(args) -> int:
+    """Smoke test the ThetaData connection on one symbol and date. Never prints the key."""
+    import datetime as dt
+
+    from .data.thetadata import eod_option_chain, eod_stock_ohlc
+    from .events import atm_straddle, expiries_after, implied_move_simple
+
+    day = dt.date.fromisoformat(args.date)
+    ohlc = eod_stock_ohlc(args.symbol, day - dt.timedelta(days=7), day)
+    print(f"stock EOD rows: {len(ohlc)}; last close {ohlc['close'].iloc[-1] if len(ohlc) else 'n/a'}")
+    chain = eod_option_chain(args.symbol, day, max_dte=args.max_dte)
+    print(f"option EOD rows: {len(chain)}; columns: {list(chain.columns)}")
+    if len(chain) and len(ohlc):
+        spot = float(ohlc["close"].iloc[-1])
+        exp = expiries_after(chain, day, n=2)
+        print(f"expiries: {[e.date().isoformat() for e in exp]}")
+        s = atm_straddle(chain[chain["date"] == chain["date"].max()], spot, exp[0])
+        print(f"ATM strike {s['strike']} straddle mid {s['straddle_mid']:.2f} "
+              f"implied move {implied_move_simple(s['straddle_mid'], spot):.4f} "
+              f"rel spread {s['rel_spread']:.3f} zero bid {s['zero_bid']}")
+    return 0
+
+
 def _cmd_power(args) -> int:
     from pathlib import Path
 
@@ -120,6 +143,12 @@ def main(argv: list[str] | None = None) -> int:
     pc.add_argument("date", help="YYYY-MM-DD")
     pc.add_argument("--min-cap", type=float, default=2e9)
     pc.set_defaults(func=_cmd_calendar)
+
+    pt = sub.add_parser("theta-probe", help="smoke test ThetaData on one symbol and date")
+    pt.add_argument("symbol")
+    pt.add_argument("date", help="YYYY-MM-DD")
+    pt.add_argument("--max-dte", type=int, default=45)
+    pt.set_defaults(func=_cmd_theta_probe)
 
     pp = sub.add_parser("power", help="simulation power analysis for the primary test")
     pp.add_argument("--sims", type=int, default=500)
