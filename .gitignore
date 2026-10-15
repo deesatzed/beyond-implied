@@ -19,5 +19,10 @@ data/logs/
 !ledger/
 !report/
 
+# Secrets: never commit
+.env
+.env.*
+!.env.example
+
 # OS
 .DS_Store
