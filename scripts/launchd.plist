@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template. Install to ~/Library/LaunchAgents/com.deesatzed.beyond-implied.daily.plist,
+     replacing __REPO__ and __HOME__. Runs at 16:25 local time (New York) Monday-Friday.
+     If the Mac is asleep at that time, launchd runs the job when it wakes. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.deesatzed.beyond-implied.daily</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>__REPO__/scripts/run_daily.sh</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>BI_REPO</key>
+    <string>__REPO__</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>16</integer><key>Minute</key><integer>25</integer></dict>
+    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>16</integer><key>Minute</key><integer>25</integer></dict>
+    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>16</integer><key>Minute</key><integer>25</integer></dict>
+    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>16</integer><key>Minute</key><integer>25</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>16</integer><key>Minute</key><integer>25</integer></dict>
+  </array>
+  <key>StandardOutPath</key>
+  <string>__HOME__/Library/Logs/beyond-implied-daily.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/Library/Logs/beyond-implied-daily.log</string>
+</dict>
+</plist>

@@ -12,6 +12,7 @@ dist/
 data/raw/
 data/interim/
 data/processed/
+data/logs/
 *.parquet
 
 # Keep the ledger and derived results under version control
