@@ -70,6 +70,14 @@ def _to_pandas(df) -> pd.DataFrame:
     return df if isinstance(df, pd.DataFrame) else df.to_pandas()
 
 
+def _naive_dates(s: pd.Series) -> pd.Series:
+    """Report timestamps -> naive local calendar dates (drops any timezone, keeps wall time)."""
+    t = pd.to_datetime(s)
+    if t.dt.tz is not None:
+        t = t.dt.tz_localize(None)
+    return t.dt.normalize()
+
+
 _RIGHT = {"C": "C", "CALL": "C", "P": "P", "PUT": "P"}
 
 
@@ -79,44 +87,57 @@ def normalize_option_eod(raw: pd.DataFrame, root: str) -> pd.DataFrame:
     df["root"] = root.upper()
     df["expiry"] = pd.to_datetime(df["expiration"])
     df["cp"] = df["right"].astype(str).str.upper().map(_RIGHT)
-    df["date"] = pd.to_datetime(df["created"]).dt.tz_localize(None).dt.normalize()
+    df["date"] = _naive_dates(df["created"])
     keep = ["root", "date", "expiry", "cp", "strike", "bid", "ask", "close", "volume",
             "bid_size", "ask_size", "last_trade"]
     return df[[c for c in keep if c in df.columns]].dropna(subset=["cp"])
 
 
+def _cache_path(kind: str, name: str):
+    d = raw_dir("thetadata") / kind
+    d.mkdir(parents=True, exist_ok=True)
+    return d / name
+
+
 def eod_option_chain(root: str, start: dt.date, end: dt.date | None = None, *,
                      max_dte: int | None = 60, strike_range: int | None = None,
                      min_interval: float = 2.5, cache: bool = True) -> pd.DataFrame:
-    """End-of-day quotes for all expiries (optionally within max_dte) from start to end."""
+    """End-of-day quotes for all expiries (optionally within max_dte) from start to end.
+
+    With `cache`, a previously downloaded identical request is read from disk instead.
+    """
     end = end or start
-    kw = {"symbol": root.upper(), "expiration": "*", "start_date": start, "end_date": end}
-    if max_dte is not None:
-        kw["max_dte"] = max_dte
-    if strike_range is not None:
-        kw["strike_range"] = strike_range
-    _throttle(min_interval)
-    raw = _to_pandas(client().option_history_eod(**kw))
-    if cache and not raw.empty:
-        d = raw_dir("thetadata") / "option_eod" / root.upper()
-        d.mkdir(parents=True, exist_ok=True)
-        raw.to_csv(d / f"{start.isoformat()}_{end.isoformat()}.csv.gz", index=False,
-                   compression="gzip")
+    tag = f"dte{max_dte}" + (f"_sr{strike_range}" if strike_range else "")
+    path = _cache_path(f"option_eod/{root.upper()}", f"{start.isoformat()}_{end.isoformat()}_{tag}.csv.gz")
+    if cache and path.exists():
+        raw = pd.read_csv(path)
+    else:
+        kw = {"symbol": root.upper(), "expiration": "*", "start_date": start, "end_date": end}
+        if max_dte is not None:
+            kw["max_dte"] = max_dte
+        if strike_range is not None:
+            kw["strike_range"] = strike_range
+        _throttle(min_interval)
+        raw = _to_pandas(client().option_history_eod(**kw))
+        if cache:
+            raw.to_csv(path, index=False, compression="gzip")
     return normalize_option_eod(raw, root) if not raw.empty else raw
 
 
 def eod_stock_ohlc(symbol: str, start: dt.date, end: dt.date, *, min_interval: float = 2.5,
                    cache: bool = True) -> pd.DataFrame:
-    _throttle(min_interval)
-    raw = _to_pandas(client().stock_history_eod(symbol=symbol.upper(), start_date=start,
-                                                end_date=end))
+    path = _cache_path("stock_eod", f"{symbol.upper()}_{start.isoformat()}_{end.isoformat()}.csv.gz")
+    if cache and path.exists():
+        raw = pd.read_csv(path)
+    else:
+        _throttle(min_interval)
+        raw = _to_pandas(client().stock_history_eod(symbol=symbol.upper(), start_date=start,
+                                                    end_date=end))
+        if cache:
+            raw.to_csv(path, index=False, compression="gzip")
     if raw.empty:
-        return raw
-    if cache:
-        d = raw_dir("thetadata") / "stock_eod"
-        d.mkdir(parents=True, exist_ok=True)
-        raw.to_csv(d / f"{symbol.upper()}_{start.isoformat()}_{end.isoformat()}.csv.gz",
-                   index=False, compression="gzip")
+        return pd.DataFrame(columns=["open", "high", "low", "close", "volume"])
     df = raw.copy()
-    df["date"] = pd.to_datetime(df["created"]).dt.tz_localize(None).dt.normalize()
-    return df.set_index("date")[["open", "high", "low", "close", "volume"]].sort_index()
+    df["date"] = _naive_dates(df["created"])
+    out = df.set_index("date")[["open", "high", "low", "close", "volume"]].sort_index()
+    return out[~out.index.duplicated(keep="last")]

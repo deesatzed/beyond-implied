@@ -94,6 +94,26 @@ def _cmd_theta_probe(args) -> int:
     return 0
 
 
+def _cmd_phase2(args) -> int:
+    import datetime as dt
+
+    import pandas as pd
+
+    from .config import data_dir
+    from .phase2 import build_events, write_report
+
+    if args.report_only:
+        events = pd.read_csv(data_dir() / "processed" / "events.csv.gz")
+        failures = pd.read_csv(data_dir() / "processed" / "failures.csv")
+    else:
+        syms = args.symbols.split(",") if args.symbols else None
+        events, failures = build_events(dt.date.fromisoformat(args.start),
+                                        dt.date.fromisoformat(args.end), args.names,
+                                        symbols=syms)
+    print(write_report(events, failures, args.names))
+    return 0
+
+
 def _cmd_power(args) -> int:
     from pathlib import Path
 
@@ -149,6 +169,14 @@ def main(argv: list[str] | None = None) -> int:
     pt.add_argument("date", help="YYYY-MM-DD")
     pt.add_argument("--max-dte", type=int, default=45)
     pt.set_defaults(func=_cmd_theta_probe)
+
+    p2 = sub.add_parser("phase2", help="build the event table and the data-test report")
+    p2.add_argument("--start", default="2023-07-01")
+    p2.add_argument("--end", default="2026-10-14")
+    p2.add_argument("--names", type=int, default=100)
+    p2.add_argument("--symbols", help="comma-separated list instead of the auto universe")
+    p2.add_argument("--report-only", action="store_true")
+    p2.set_defaults(func=_cmd_phase2)
 
     pp = sub.add_parser("power", help="simulation power analysis for the primary test")
     pp.add_argument("--sims", type=int, default=500)
