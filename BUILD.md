@@ -54,10 +54,10 @@ Sections: `data/`, `events/`
 
 1. `bi indices VIX VIX3M VVIX SKEW` — download index history; run quality checks (gaps, outliers,
    the 2003 VIX methodology break).
-2. Install the ThetaData Terminal on the Mac Mini (free tier) and implement `data/thetadata.py`
-   against its documented endpoints. Pull one year of end-of-day chains for ~100 liquid names
-   for the quality test. (The H1 dataset needs ~500 names per season; see Phase 1b. If the free
-   year cannot supply that, the $80/month Standard tier reaches back to 2016.)
+2. [x] ThetaData adapter via the official Python library (no Terminal needed); live on the Mac
+   Mini. The free account serves option EOD history from mid-2023 (refused for 2022 and earlier),
+   about 13 seasons. Pull end-of-day chains for ~100 liquid names for the quality test. The H1
+   dataset (~500 names per season) fits inside the free history; no paid tier needed for v1.
 3. Load an earnings calendar with a before-open/after-close flag (`data/calendar.py`; Nasdaq's
    calendar carries the flag and is free).
 4. Build the event table (`events/`): timing alignment, implied move (simple and term-structure

@@ -45,9 +45,11 @@ quality problems flagged rather than silently fixed. Bad labels sink this projec
    (1990-01-02 to 2026-10-14), one flagged jump on 2018-02-05 (a real event, keep it); VVIX 5,125
    rows with a bad-looking 2006-03-15 value and 6 gaps over 5 business days (decide: start VVIX
    in 2007).
-2. Install the ThetaData Terminal on the Mac Mini; read its docs; implement `thetadata.py`
-   (`eod_option_chain`, `eod_stock_ohlc`) against the documented endpoints. Respect the free-tier
-   rate limit. Cache raw responses with hashes.
+2. ~~Install the ThetaData Terminal.~~ Done 2026-10-15 with the official Python library instead
+   (no Terminal, no Java): `thetadata.py` implements `eod_option_chain` and `eod_stock_ohlc`,
+   throttled to ~24 requests/minute, raw responses cached. Free account checked on AAPL: option EOD
+   history available back to at least 2023-10-26; 2022-10-27 and earlier are refused (paid tiers).
+   That is roughly 13 earnings seasons (mid-2023 to Q3 2026), far more than the 4 planned.
 3. ~~Check Cboe's option `iv` units.~~ Done 2026-10-15: per-contract `iv` is decimal, underlying
    `iv30` is percent. End-to-end check on the live AAPL chain: ATM straddle to the Oct 30 expiry
    implied a 3.8% move with a 5.8% relative spread.

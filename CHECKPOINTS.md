@@ -4,6 +4,22 @@ Newest first. Each checkpoint has a matching git tag `checkpoint-YYYY-MM-DD`.
 
 ---
 
+## 2026-10-15 (late) — ThetaData connected; secrets locked down
+
+- `.env` (ThetaData and OpenRouter keys) is gitignored, untracked, never committed, and set to
+  owner-only permissions on the Mac. `.env.example` lists the names.
+- ThetaData adapter works through the official Python library (no Terminal, no Java). Probe on
+  AAPL 2026-07-30: 1,442 contracts; ATM straddle to the Jul 31 expiry implied a 3.79% move at a
+  5.9% relative spread.
+- Free history reaches back to mid-2023 (2023-10-26 served; 2022-10-27 refused). About 13 seasons
+  are available, so the ~2,000-event power target is reachable without a paid tier.
+- OpenRouter key: not used in v1. Possible Phase 9 challenger (an LLM forecast tested under the
+  same encompassing rules).
+
+**Next:** Phase 2 event-table pipeline, then the 100-name data test, running overnight on the Mac.
+
+---
+
 ## 2026-10-15 (night) — Daily collection live; prior art done (Phase 1)
 
 **State:** 56 tests passing. Forward data collection running on the Mac Mini.
