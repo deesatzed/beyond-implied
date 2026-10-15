@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# Data: vendor and raw data are never committed
+data/raw/
+data/interim/
+data/processed/
+*.parquet
+
+# Keep the ledger and derived results under version control
+!ledger/
+!report/
+
+# OS
+.DS_Store
