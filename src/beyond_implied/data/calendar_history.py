@@ -19,7 +19,8 @@ from .market_calendar import is_trading_day
 
 
 def _cached(date: dt.date):
-    files = sorted(raw_dir("nasdaq_calendar").glob(f"{date.isoformat()}_as_of_*.json"))
+    files = sorted(f for f in raw_dir("nasdaq_calendar").glob(f"{date.isoformat()}_as_of_*.json")
+                   if not f.name.endswith(".meta.json"))
     return files[-1] if files else None
 
 

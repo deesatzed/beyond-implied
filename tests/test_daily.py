@@ -66,3 +66,18 @@ def test_trading_days():
     assert not is_trading_day(D(2026, 11, 26))            # Thanksgiving
     assert next_trading_day(D(2026, 11, 25)) == D(2026, 11, 27)
     assert prev_trading_day(D(2026, 10, 19)) == D(2026, 10, 16)  # Monday -> Friday
+
+
+def test_calendar_cache_ignores_meta_sidecars(monkeypatch, tmp_path):
+    import json
+
+    from beyond_implied.data import calendar_history
+
+    monkeypatch.setenv("BI_ROOT", str(tmp_path))
+    d = tmp_path / "data" / "raw" / "nasdaq_calendar"
+    d.mkdir(parents=True)
+    (d / "2026-10-16_as_of_20261015T120000Z.json").write_text(json.dumps(_payload(
+        [{"symbol": "TRV", "time": "time-pre-market", "marketCap": "$78,803,812,000"}])))
+    (d / "2026-10-16_as_of_20261015T120000Z.json.meta.json").write_text("{}")
+    cal = calendar_history.calendar_range(D(2026, 10, 16), D(2026, 10, 16))
+    assert cal["symbol"].tolist() == ["TRV"]
