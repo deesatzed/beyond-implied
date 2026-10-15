@@ -1,0 +1,44 @@
+# Expert-system gate rules. Any rule whose condition is true makes the decision ABSTAIN.
+# Every decision logs the IDs of the rules that fired.
+# DRAFT until PREREGISTRATION.md is frozen (Phase 3).
+#
+# Condition ops: eq, ne, lt, le, gt, ge, in, not_in, is_null, not_null
+# A rule with `all = [...]` fires only if every condition holds.
+
+[[rule]]
+id = "G1-timing-unknown"
+when = { field = "timing", op = "not_in", value = ["BMO", "AMC"] }
+reason = "Announcement timing is not confirmed before-open or after-close"
+
+[[rule]]
+id = "G2-zero-bid"
+when = { field = "zero_bid", op = "eq", value = true }
+reason = "A straddle leg has a zero bid; mid is not a usable price"
+
+[[rule]]
+id = "G3-wide-spread"
+when = { field = "rel_spread", op = "gt", value = 0.10 }
+reason = "Straddle relative spread above 10%"
+
+[[rule]]
+id = "G4-low-price"
+when = { field = "spot", op = "lt", value = 10.0 }
+reason = "Underlying below $10"
+
+[[rule]]
+id = "G5-thin-options"
+when = { field = "option_volume", op = "lt", value = 300 }
+reason = "Fewer than 300 option contracts traded on the pre-event day"
+
+[[rule]]
+id = "G6-short-history"
+when = { field = "trailing_n", op = "lt", value = 4 }
+reason = "Fewer than 4 prior events; trailing baseline undefined"
+
+[[rule]]
+id = "G7-stress-regime"
+all = [
+  { field = "vix_vix3m", op = "gt", value = 1.0 },
+  { field = "vvix", op = "gt", value = 120.0 },
+]
+reason = "Inverted VIX term structure with elevated VVIX (draft regime gate; threshold to be fixed in Phase 3)"

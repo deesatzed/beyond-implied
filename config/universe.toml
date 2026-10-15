@@ -1,0 +1,13 @@
+# Universe filters and event-construction settings.
+# DRAFT until PREREGISTRATION.md is frozen (Phase 3). Changes after the freeze need a new prereg tag.
+
+[universe]
+min_underlying_price = 10.0        # USD, pre-event close
+min_option_volume = 300            # contracts on the pre-event day (all strikes, all expiries)
+max_straddle_rel_spread = 0.10     # (ask_c + ask_p - bid_c - bid_p) / straddle_mid
+exclude_zero_bid = true
+
+[events]
+trailing_events = 12               # window for trailing mean absolute move
+trailing_min_events = 4            # fewer than this -> baseline undefined
+max_days_to_first_expiry = 10      # calendar days from post-event date to first expiry used
