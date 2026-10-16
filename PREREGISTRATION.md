@@ -27,6 +27,11 @@ and tagging `prereg-v1`. Any change after that is a new version with its own tag
   companies with mixed timing have unrecorded events excluded. *Changed 2026-10-15:* the earlier
   overnight-gap rule chose the window with the larger move, which selects on the outcome and
   inflates realized moves; it is kept only as a diagnostic.
+- Fallback when no recorded or habitual timing exists: the IV-collapse rule (`events/timing_iv.py`),
+  which dates the report by the close at which front-expiry ATM implied volatility drops, with a
+  minimum collapse of 2 vol points and a larger-to-smaller drop ratio ≥ 1.5. Validated 2026-10-16 on
+  763 events with reference timing: 94.5% classified, 96.1% agreement (`report/timing_iv.md`).
+  Results are reported separately for IV-timed events.
 - Realized move: `|post / pre − 1|`.
 - Implied move: at-the-money straddle mid / spot at the pre-event close, using the first expiry after
   the event; secondary definition strips residual time value using two expiries (`events/` GOAL.md).

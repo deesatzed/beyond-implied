@@ -45,6 +45,8 @@ def build_events(start: dt.date, end: dt.date, n_names: int = 100, max_dte: int 
           flush=True)
     habitual, fwd_known = habitual_timing(cal, universe)
     print(f"habitual timing for {len(habitual)} of {len(universe)} names", flush=True)
+    iv_map = iv_timing_map()
+    print(f"IV-collapse timing available for {len(iv_map)} events", flush=True)
     rows, fails = [], []
     cal = cal[cal["symbol"].isin(universe)].sort_values(["symbol", "date"])
     for k, (sym, evs) in enumerate(cal.groupby("symbol", sort=False), 1):
@@ -62,11 +64,12 @@ def build_events(start: dt.date, end: dt.date, n_names: int = 100, max_dte: int 
             # Diagnostic only: the gap rule looks at the outcome, so it is never used to pick timing.
             inferred, ratio = infer_timing(ohlc["close"], ohlc["open"], ann)
             known = ev.timing if ev.timing in ("BMO", "AMC") else None
-            timing = known or habitual.get(sym)
-            source = "calendar" if known else "habitual"
+            timing = known or habitual.get(sym) or iv_map.get((sym, ann))
+            source = ("calendar" if known else "habitual" if habitual.get(sym)
+                      else "iv" if iv_map.get((sym, ann)) else None)
             if timing not in ("BMO", "AMC"):
                 fails.append({**rec, "stage": "timing",
-                              "reason": "no recorded or habitual timing"})
+                              "reason": "no recorded, habitual or IV-collapse timing"})
                 continue
             try:
                 pre, post = pre_post_dates(ann, timing, [d.date() for d in ohlc.index])
@@ -90,6 +93,20 @@ def build_events(start: dt.date, end: dt.date, n_names: int = 100, max_dte: int 
     events.to_csv(_processed() / "events.csv.gz", index=False, compression="gzip")
     failures.to_csv(_processed() / "failures.csv", index=False)
     return events, failures
+
+
+IV_MIN_RATIO = 1.5  # pre-registered; validated in report/timing_iv.md (96.1% agreement)
+
+
+def iv_timing_map(min_ratio: float = IV_MIN_RATIO) -> dict:
+    """(symbol, date) -> BMO/AMC from `bi timing-iv`, at the pre-registered threshold."""
+    path = data_dir() / "processed" / "timing_iv.csv.gz"
+    if not path.exists():
+        return {}
+    df = pd.read_csv(path)
+    df = df[(df["ratio"] >= min_ratio) & df["iv_timing"].isin(["BMO", "AMC"])]
+    return {(r.symbol, dt.date.fromisoformat(str(r.announce_date)[:10])): r.iv_timing
+            for r in df.itertuples(index=False)}
 
 
 def habitual_timing(cal: pd.DataFrame, universe: list[str], days_ahead: int = 105
@@ -237,7 +254,8 @@ def write_report(events: pd.DataFrame, failures: pd.DataFrame, n_names: int) -> 
         (f"- Seasons covered: {n_seasons}. Projected usable events at 500 names: "
         f"~{per_season_500 * n_seasons:,.0f} ({per_season_500:,.0f} per season)."),
         (f"- Timing: {int((events['timing_source'] == 'habitual').sum())} events used the company's "
-         f"habitual timing and {len(known)} had recorded timing. Habitual timing from upcoming dates "
+         f"habitual timing, {int((events['timing_source'] == 'iv').sum())} used IV-collapse timing, "
+         f"and {len(known)} had recorded timing. Habitual timing from upcoming dates "
          f"matched recorded timing on {fmt(agree, True)} of {len(k_h)} checks. The outcome-based gap "
          f"rule (diagnostic only, never used) agreed with the timing used on {fmt(gap_agree, True)}."),
         "",
