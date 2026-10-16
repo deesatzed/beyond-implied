@@ -4,6 +4,28 @@ Newest first. Each checkpoint has a matching git tag `checkpoint-YYYY-MM-DD`.
 
 ---
 
+## 2026-10-16 — Phase 2 data test: conditional GO
+
+- Full run: 100 names, 13 seasons, 850 calendar days complete, 1,307 announcements.
+- First run failed the gate and exposed a real bias: timing chosen by the larger overnight gap selects
+  on the outcome (wrong on ~21% of events). Replaced with each company's habitual BMO/AMC (10/10 on
+  recorded checks). Spread cut for the forecasting sample relaxed to 25% (P&L keeps 10%).
+- With outcome-free timing: 665 of 763 events usable (12.8% unusable). Large-cap implied moves are
+  close to fair over 13 seasons (realized/implied ≈ 1.0); executable one-day straddles lose in most
+  seasons; seasons swing 0.73–1.23.
+- Real-data power (500 names, 13 seasons, trailing control): 93% at a 5% effect; false positives 2–3%.
+- Blocker for Phase 3: timing covers 59/100 names. Plan: daily recording + an implied-volatility-
+  collapse timing rule, validated on covered names; freeze when ≥ 85% of names are covered.
+- Pipeline fixes: ThetaData 365-day limit and future dates, Nasdaq rate limits with backoff, cache
+  sidecar bug, mixed timestamp formats.
+
+**Next actions**
+1. Implement and validate the IV-collapse timing rule; rebuild.
+2. Expand the universe toward 500 names (overnight pulls).
+3. Re-check ORATS once smaller names are included; then Phase 3 freeze.
+
+---
+
 ## 2026-10-15 (late) — ThetaData connected; secrets locked down
 
 - `.env` (ThetaData and OpenRouter keys) is gitignored, untracked, never committed, and set to

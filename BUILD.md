@@ -76,6 +76,12 @@ collected after the fact; analysis waits for Phase 3.
 **Gate (stop criteria from GOAL.md):** season averages roughly match ORATS; unusable events ≤ 10–15%;
 a path to ~2,000 usable events exists. If any fails, stop and write up why.
 
+**Result 2026-10-16: conditional GO** (`report/data_test.md`). Quality (12.8% unusable among events
+with known timing), volume and power (93% at a 5% effect, 13 seasons, 500 names) pass. Outcome-free
+timing covers 59 of 100 names; Phase 3 waits until coverage reaches ≥ 85% of names via daily
+recording plus an implied-volatility-collapse timing rule validated on covered names. ORATS matches
+over twelve quarters but not for the Jan–Feb 2026 season (large-cap universe, one-day hold).
+
 ---
 
 ## Phase 3 — Freeze the pre-registration (half day)

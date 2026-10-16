@@ -1,0 +1,11 @@
+{
+  "n_usable": 665,
+  "n_dates": 230,
+  "events_per_date_median": 2.0,
+  "sd_log_implied": 0.478312567,
+  "base_move_median": 0.0454034073,
+  "ratio_mean": 1.0229041859,
+  "ratio_quantiles": {"0.1": 0.1680765361, "0.5": 0.8840765086, "0.9": 2.033835425, "0.99": 3.6246288984},
+  "sd_date_effect": 0.0,
+  "sd_within_log_ratio": 1.085443267
+}
