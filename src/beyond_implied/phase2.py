@@ -43,6 +43,8 @@ def build_events(start: dt.date, end: dt.date, n_names: int = 100, max_dte: int 
     universe = symbols or select_universe(cal, n_names)
     print(f"calendar rows {len(cal)}; universe {len(universe)} names; {time.time()-t0:.0f}s",
           flush=True)
+    habitual, fwd_known = habitual_timing(cal, universe)
+    print(f"habitual timing for {len(habitual)} of {len(universe)} names", flush=True)
     rows, fails = [], []
     cal = cal[cal["symbol"].isin(universe)].sort_values(["symbol", "date"])
     for k, (sym, evs) in enumerate(cal.groupby("symbol", sort=False), 1):
@@ -57,21 +59,24 @@ def build_events(start: dt.date, end: dt.date, n_names: int = 100, max_dte: int 
         for ev in evs.itertuples(index=False):
             ann = ev.date.date()
             rec = {"symbol": sym, "announce_date": ann}
+            # Diagnostic only: the gap rule looks at the outcome, so it is never used to pick timing.
             inferred, ratio = infer_timing(ohlc["close"], ohlc["open"], ann)
             known = ev.timing if ev.timing in ("BMO", "AMC") else None
-            timing = known or inferred
+            timing = known or habitual.get(sym)
+            source = "calendar" if known else "habitual"
             if timing not in ("BMO", "AMC"):
-                fails.append({**rec, "stage": "timing", "reason": "timing unknown and not inferable"})
+                fails.append({**rec, "stage": "timing",
+                              "reason": "no recorded or habitual timing"})
                 continue
             try:
                 pre, post = pre_post_dates(ann, timing, [d.date() for d in ohlc.index])
                 chain = eod_option_chain(sym, pre, post, max_dte=max_dte)
                 if chain.empty:
                     raise ValueError("empty option chain")
-                row = build_event(sym, ann, timing, ohlc, chain,
-                                  timing_source="calendar" if known else "inferred",
+                row = build_event(sym, ann, timing, ohlc, chain, timing_source=source,
                                   timing_ratio=ratio)
                 row["timing_inferred"] = inferred
+                row["timing_habitual_fwd"] = fwd_known.get(sym)
                 row.update(market_cap=ev.market_cap, n_estimates=ev.n_estimates,
                            eps_forecast=ev.eps_forecast, eps=ev.eps, surprise_pct=ev.surprise_pct)
                 rows.append(row)
@@ -85,6 +90,31 @@ def build_events(start: dt.date, end: dt.date, n_names: int = 100, max_dte: int 
     events.to_csv(_processed() / "events.csv.gz", index=False, compression="gzip")
     failures.to_csv(_processed() / "failures.csv", index=False)
     return events, failures
+
+
+def habitual_timing(cal: pd.DataFrame, universe: list[str], days_ahead: int = 105
+                    ) -> tuple[dict, dict]:
+    """Each company's usual announcement timing, without looking at any outcome.
+
+    Uses recorded timings (forward calendar dates carry BMO/AMC; past dates do not). Returns
+    (habitual over all recorded rows, habitual from forward dates only). A name seen with both
+    timings has no habitual value and its unrecorded events are excluded.
+    """
+    today = dt.date.today()
+    fwd = calendar_range(today + dt.timedelta(days=1), today + dt.timedelta(days=days_ahead))
+    known = pd.concat([cal, fwd], ignore_index=True)
+    known = known[known["symbol"].isin(universe) & known["timing"].isin(["BMO", "AMC"])]
+
+    def _mode(df):
+        out = {}
+        for sym, g in df.groupby("symbol"):
+            vals = set(g["timing"])
+            if len(vals) == 1:
+                out[sym] = vals.pop()
+        return out
+
+    fwd_k = fwd[fwd["symbol"].isin(universe) & fwd["timing"].isin(["BMO", "AMC"])]
+    return _mode(known), _mode(fwd_k)
 
 
 def _usable(events: pd.DataFrame, cfg: dict) -> pd.Series:
@@ -123,7 +153,12 @@ def real_data_parameters(events: pd.DataFrame) -> dict:
     imp = u["implied_move_event"].where(u["implied_move_event"] > 0, u["implied_move_simple"])
     ratio = (u["realized_move"] / imp).replace([np.inf, -np.inf], np.nan).dropna()
     logr = np.log(ratio.clip(lower=1e-4))
-    date_means = logr.groupby(u.loc[ratio.index, "announce_date"]).mean()
+    grp = logr.groupby(u.loc[ratio.index, "announce_date"])
+    sizes, means = grp.size(), grp.mean()
+    within = grp.var(ddof=1).dropna()
+    within_var = float(within.mean()) if len(within) else float(logr.var())
+    multi = sizes[sizes >= 2]
+    between = float(means[multi.index].var(ddof=1) - within_var / multi.mean()) if len(multi) > 2 else 0.0
     return {
         "n_usable": len(u),
         "n_dates": int(u["announce_date"].nunique()),
@@ -132,7 +167,8 @@ def real_data_parameters(events: pd.DataFrame) -> dict:
         "base_move_median": float(imp.median()),
         "ratio_mean": float(ratio.mean()),
         "ratio_quantiles": {q: float(ratio.quantile(q)) for q in (0.1, 0.5, 0.9, 0.99)},
-        "sd_date_effect": float(date_means.std()),
+        "sd_date_effect": float(np.sqrt(max(between, 0.0))),
+        "sd_within_log_ratio": float(np.sqrt(within_var)),
     }
 
 
@@ -150,7 +186,11 @@ def write_report(events: pd.DataFrame, failures: pd.DataFrame, n_names: int) -> 
     events["usable"] = _usable(events, cfg) if len(events) else []
     out = project_root() / "report" / "data_test"
     out.mkdir(parents=True, exist_ok=True)
-    seasons = season_table(events)
+    seasons = season_table(events[events["usable"]])
+    built = events["announce_date"].map(season_label).value_counts()
+    seasons["events"] = seasons["season"].map(built).fillna(0).astype(int)
+    seasons["usable"] = seasons["season"].map(
+        events[events["usable"]]["announce_date"].map(season_label).value_counts()).fillna(0)
     seasons.to_csv(out / "seasons.csv", index=False)
 
     err = events["invariant_errors"].fillna("").str.split(";").explode()
@@ -160,7 +200,15 @@ def write_report(events: pd.DataFrame, failures: pd.DataFrame, n_names: int) -> 
     fail_stage = failures.groupby("stage").size() if len(failures) else pd.Series(dtype=int)
 
     known = events[events["timing_source"] == "calendar"]
-    agree = (known["timing"] == known["timing_inferred"]).mean() if len(known) else math.nan
+    k_h = known.dropna(subset=["timing_habitual_fwd"]) if "timing_habitual_fwd" in known else known.iloc[:0]
+    agree = (k_h["timing"] == k_h["timing_habitual_fwd"]).mean() if len(k_h) else math.nan
+    gap_agree = (events["timing"] == events["timing_inferred"]).mean()
+    pnl_cut = cfg["universe"].get("pnl_max_rel_spread", 0.10)
+    pnl = events[events["usable"] & (events["rel_spread"] <= pnl_cut)].copy()
+    pnl["season"] = pnl["announce_date"].map(season_label)
+    pnl_by = pnl.groupby("season").agg(pnl_n=("straddle_ret_exec", "size"),
+                                      pnl_mid=("straddle_ret_mid", "mean"),
+                                      pnl_exec=("straddle_ret_exec", "mean"))
     params = real_data_parameters(events)
     pd.Series(params, dtype=object).to_json(out / "real_params.json", indent=2)
 
@@ -188,8 +236,10 @@ def write_report(events: pd.DataFrame, failures: pd.DataFrame, n_names: int) -> 
         f"- Unusable share: {fmt(unusable_share, True)} (stop criterion: > 10–15%).",
         (f"- Seasons covered: {n_seasons}. Projected usable events at 500 names: "
         f"~{per_season_500 * n_seasons:,.0f} ({per_season_500:,.0f} per season)."),
-        (f"- Timing: {int((events['timing_source'] == 'inferred').sum())} events used inferred timing; "
-        f"{len(known)} had calendar timing, where inference agreed {fmt(agree, True)}."),
+        (f"- Timing: {int((events['timing_source'] == 'habitual').sum())} events used the company's "
+         f"habitual timing and {len(known)} had recorded timing. Habitual timing from upcoming dates "
+         f"matched recorded timing on {fmt(agree, True)} of {len(k_h)} checks. The outcome-based gap "
+         f"rule (diagnostic only, never used) agreed with the timing used on {fmt(gap_agree, True)}."),
         "",
         "## By season",
         "",
@@ -204,10 +254,19 @@ def write_report(events: pd.DataFrame, failures: pd.DataFrame, n_names: int) -> 
             f"{fmt(r.straddle_ret_mid, True)} | {fmt(r.straddle_ret_exec, True)} |")
     lines += [
         "",
-        ("Win = realized move above the implied move (event estimate when available). Straddle "
-        "returns hold the pre-event ATM straddle for one day (mid to mid, and pre ask to post bid)."),
+        (f"Season statistics use usable events only (no invariant errors; spread ≤ "
+         f"{cfg['universe']['max_straddle_rel_spread']:.0%} of premium). Win = realized move above the "
+         "implied move (event estimate when available). Straddle returns hold the pre-event ATM "
+         "straddle for one day (mid to mid, and pre ask to post bid)."),
         ("ORATS check: ORATS reported ≈ +45% average straddle returns for the season ending "
         "February 2026 versus ≈ −2% over the prior twelve quarters; compare the 2026Q1 row."),
+        "",
+        f"## Straddle P&L subset (spread ≤ {pnl_cut:.0%})",
+        "",
+        "| Season | Events | Straddle ret (mid) | Straddle ret (exec) |",
+        "| --- | --- | --- | --- |",
+        *[f"| {i} | {int(r.pnl_n)} | {fmt(r.pnl_mid, True)} | {fmt(r.pnl_exec, True)} |"
+          for i, r in pnl_by.iterrows()],
         "",
         "## Failures",
         "",

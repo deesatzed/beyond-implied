@@ -17,8 +17,8 @@ reason = "A straddle leg has a zero bid; mid is not a usable price"
 
 [[rule]]
 id = "G3-wide-spread"
-when = { field = "rel_spread", op = "gt", value = 0.10 }
-reason = "Straddle relative spread above 10%"
+when = { field = "rel_spread", op = "gt", value = 0.25 }
+reason = "Straddle relative spread above 25% of premium (implied move too uncertain)"
 
 [[rule]]
 id = "G4-low-price"

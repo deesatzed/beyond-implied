@@ -129,7 +129,13 @@ def _cmd_power_real(args) -> int:
     imp = ev["implied_move_event"].where(ev["implied_move_event"] > 0, ev["implied_move_simple"])
     ratio = (ev["realized_move"] / imp).replace([np.inf, -np.inf], np.nan).dropna()
     ratio = ratio[(ratio >= 0) & (ratio < 20)]
-    grid = real_data_grid(params, tuple(ratio.round(6).tolist()), n_sims=args.sims)
+    scale = args.target_names / args.names
+    n_seasons = 13  # full seasons in the free ThetaData history (mid-2023 to Q3 2026)
+    epd = max(2, round(params["n_usable"] / params["n_dates"] * scale))
+    dps = max(10, round(params["n_dates"] / n_seasons))
+    print(f"simulating {args.target_names} names: ~{epd} events per date, {dps} dates per season")
+    grid = real_data_grid(params, tuple(ratio.round(6).tolist()), n_sims=args.sims,
+                          events_per_date=epd, dates_per_season=dps)
     out = Path(project_root() / "report" / "power")
     out.mkdir(parents=True, exist_ok=True)
     grid.to_csv(out / "power_real.csv", index=False)
@@ -203,6 +209,8 @@ def main(argv: list[str] | None = None) -> int:
 
     pr = sub.add_parser("power-real", help="power grid using real-data parameters (after phase2)")
     pr.add_argument("--sims", type=int, default=300)
+    pr.add_argument("--names", type=int, default=100, help="names in the real event table")
+    pr.add_argument("--target-names", type=int, default=500, help="universe size to project")
     pr.set_defaults(func=_cmd_power_real)
 
     pp = sub.add_parser("power", help="simulation power analysis for the primary test")

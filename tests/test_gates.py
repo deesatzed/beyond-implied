@@ -20,7 +20,7 @@ def test_clean_event_commits():
 @pytest.mark.parametrize("change,rule", [
     ({"timing": "UNKNOWN"}, "G1-timing-unknown"),
     ({"zero_bid": True}, "G2-zero-bid"),
-    ({"rel_spread": 0.25}, "G3-wide-spread"),
+    ({"rel_spread": 0.40}, "G3-wide-spread"),
     ({"spot": 6.0}, "G4-low-price"),
     ({"option_volume": 50}, "G5-thin-options"),
     ({"trailing_n": 2}, "G6-short-history"),

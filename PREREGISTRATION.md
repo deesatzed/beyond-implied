@@ -22,10 +22,11 @@ and tagging `prereg-v1`. Any change after that is a new version with its own tag
 - Before-open announcement on day D: pre-event close = close of D−1; post-event close = close of D.
 - After-close announcement on day D: pre-event close = close of D; post-event close = close of D+1.
 - Unknown or unconfirmed timing: excluded and counted.
-- Retrospective seasons: Nasdaq's past calendar has no timing flag, so timing is inferred from the
-  larger overnight gap (close D−1 → open D vs close D → open D+1) and flagged `inferred`. The rule's
-  accuracy is measured on forward events with recorded timing before it is used; inferred-timing
-  events are reported separately.
+- Retrospective seasons: Nasdaq's past calendar has no timing flag. Timing is the company's
+  habitual timing (all recorded BMO/AMC values for that company agree, including upcoming dates);
+  companies with mixed timing have unrecorded events excluded. *Changed 2026-10-15:* the earlier
+  overnight-gap rule chose the window with the larger move, which selects on the outcome and
+  inflates realized moves; it is kept only as a diagnostic.
 - Realized move: `|post / pre − 1|`.
 - Implied move: at-the-money straddle mid / spot at the pre-event close, using the first expiry after
   the event; secondary definition strips residual time value using two expiries (`events/` GOAL.md).
@@ -33,7 +34,9 @@ and tagging `prereg-v1`. Any change after that is a new version with its own tag
 ## Universe filters (config/universe.toml)
 
 - Underlying price ≥ $10; option volume ≥ 300 contracts on the pre-event day.
-- Straddle relative spread ≤ the configured maximum; zero bids excluded.
+- Straddle relative spread ≤ 25% of premium for the forecasting sample; ≤ 10% for any P&L
+  statistic; zero bids excluded. *Changed 2026-10-15 (draft):* the median ATM spread rose from
+  ~5.5% (2023) to 11–15% (2026) as nearer expiries appeared; a 10% cut removed 39% of events.
 
 ## Baselines
 

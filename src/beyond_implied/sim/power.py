@@ -89,11 +89,12 @@ def power_grid(shares=(0.0, 0.02, 0.05, 0.10), seasons=(1, 2, 4), events_per_dat
 
 def real_data_grid(params: dict, z_pool: tuple, n_sims: int = 300,
                    shares=(0.0, 0.02, 0.05, 0.10), seasons=(4, 8, 13),
-                   trailing_share: float = 0.05) -> pd.DataFrame:
+                   trailing_share: float = 0.05, events_per_date: int | None = None,
+                   dates_per_season: int | None = None) -> pd.DataFrame:
     """Power with dispersion, date shocks and move shape taken from the real event table,
     and the narrowed H1 (trailing move as a control)."""
-    epd = max(2, round(params.get("events_per_date_median", 10)))
-    base = SimConfig(base_move=params["base_move_median"], sd_public=params["sd_log_implied"],
+    epd = events_per_date or max(2, round(params.get("events_per_date_median", 10)))
+    base = SimConfig(dates_per_season=dates_per_season or 35,base_move=params["base_move_median"], sd_public=params["sd_log_implied"],
                      sd_date=params["sd_date_effect"], z_pool=z_pool, events_per_date=epd,
                      trailing_share=trailing_share)
     rows = []

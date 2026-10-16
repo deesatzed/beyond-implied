@@ -4,7 +4,8 @@
 [universe]
 min_underlying_price = 10.0        # USD, pre-event close
 min_option_volume = 300            # contracts on the pre-event day (all strikes, all expiries)
-max_straddle_rel_spread = 0.10     # (ask_c + ask_p - bid_c - bid_p) / straddle_mid
+max_straddle_rel_spread = 0.25     # forecasting sample: (ask_c + ask_p - bid_c - bid_p) / straddle_mid
+pnl_max_rel_spread = 0.10          # P&L subset only (execution cost matters there)
 exclude_zero_bid = true
 
 [events]
