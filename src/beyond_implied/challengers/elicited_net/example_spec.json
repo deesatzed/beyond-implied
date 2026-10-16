@@ -1,0 +1,32 @@
+{
+  "spec_version": "1",
+  "target": "abs_move",
+  "elicitation": {
+    "model_id": "none (hand-written example for tests)",
+    "stated_training_cutoff": "n/a",
+    "prompt_sha256": "n/a",
+    "elicited_utc": "2026-10-16T00:00:00Z"
+  },
+  "review": {"approved_by": "example", "approved_utc": "2026-10-16T00:00:00Z", "changes": []},
+  "nodes": [
+    {"id": "implied_move_event", "kind": "input", "input": "implied_move_event", "unit": "fraction",
+     "distribution": "lognormal", "median": 0.045, "range": [0.01, 0.15], "range_coverage": 0.9,
+     "parents": [], "rationale": "Market's event-isolated expected move; the incumbent forecast."},
+    {"id": "f_trailing", "kind": "input", "input": "f_trailing", "unit": "fraction",
+     "distribution": "lognormal", "median": 0.045, "range": [0.008, 0.18], "range_coverage": 0.9,
+     "parents": [], "rationale": "Mean of the last 12 realized earnings moves for the company."},
+    {"id": "vix_vix3m", "kind": "input", "input": "vix_vix3m", "unit": "ratio",
+     "distribution": "lognormal", "median": 0.9, "range": [0.75, 1.15], "range_coverage": 0.9,
+     "parents": [], "rationale": "Above 1 means market stress is priced near-term."},
+    {"id": "underpricing", "kind": "latent", "unit": "ratio", "distribution": "lognormal",
+     "median": 1.0, "range": [0.7, 1.4], "range_coverage": 0.8,
+     "parents": ["f_trailing", "implied_move_event", "vix_vix3m"],
+     "relation": "log(underpricing) ~ a + b*log(f_trailing/implied_move_event) + c*(vix_vix3m-1)",
+     "rationale": "How far the realized move tends to exceed the implied move for this kind of event."},
+    {"id": "abs_move", "kind": "target", "unit": "fraction", "distribution": "lognormal",
+     "median": 0.04, "range": [0.004, 0.2], "range_coverage": 0.9,
+     "parents": ["implied_move_event", "underpricing"],
+     "relation": "log(abs_move) ~ log(implied_move_event) + log(underpricing) + noise",
+     "rationale": "Absolute move from the pre-event close to the post-event close."}
+  ]
+}

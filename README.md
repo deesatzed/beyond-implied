@@ -45,6 +45,7 @@ src/beyond_implied/
   metrics/      second-order, third-order and decision-level scoring
   ledger/       append-only, hash-chained prediction ledger
   sim/          planted-signal simulations, power analysis, look-ahead canary
+  challengers/  Phase 9 challengers (C1: AI-elicited probabilistic network, spec only)
 report/         power analysis, figures and the writeup
 docs/           plan and risk analysis
 tests/

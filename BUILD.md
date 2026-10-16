@@ -176,3 +176,8 @@ Sections: `forecasters/`, `gates/`, `ledger/`
 4. Every promotion and rejection is a ledger record with the evidence.
 
 **Gate:** no change reaches the champion without a season it never saw.
+
+**First challenger (C1): AI-elicited probabilistic network.** An LLM proposes nodes, distributions,
+medians and ranges; a person reviews and approves; the spec is frozen and scored on forward events
+only (after the eliciting model's training cutoff). Spec format and validator are built:
+`src/beyond_implied/challengers/elicited_net/` (GOAL.md, spec_schema.md, spec.py).
