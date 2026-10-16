@@ -95,6 +95,8 @@ spreads), not a label-quality failure.
 2. `bi ledger prereg PREREGISTRATION.md config/gates.toml config/universe.toml` — writes the SHA-256
    of each file as the ledger's first records.
 3. `git tag prereg-v1 && git push --tags`.
+4. Landing page (decided 2026-10-16: built after the freeze, not before): the question, the frozen
+   pre-registration with its ledger hashes, the data test, and what will be evaluated when.
 
 **Gate:** tag exists; ledger verifies; no evaluation has touched held-out seasons.
 
