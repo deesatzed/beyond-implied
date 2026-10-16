@@ -37,9 +37,10 @@ def atm_vol(chain_day: pd.DataFrame, spot: float, expiry, day) -> float:
 
 
 def iv_collapse_timing(chain: pd.DataFrame, closes: pd.Series, announce: dt.date,
-                       min_ratio: float = 1.5) -> dict:
+                       min_ratio: float = 1.5, min_drop: float = 0.02) -> dict:
     """Return {'timing', 'drop_bmo', 'drop_amc', 'ratio'}; timing is BMO, AMC or UNKNOWN.
 
+    `min_drop` is the smallest collapse (in annualised vol units) that counts as an event.
     `chain` must cover the closes of D-1, D and D+1 (trading days); `closes` is the stock's
     daily close series indexed by date.
     """
@@ -65,7 +66,7 @@ def iv_collapse_timing(chain: pd.DataFrame, closes: pd.Series, announce: dt.date
     drop_bmo, drop_amc = ivs[0] - ivs[1], ivs[1] - ivs[2]
     out.update(drop_bmo=drop_bmo, drop_amc=drop_amc)
     hi, lo = max(drop_bmo, drop_amc), min(drop_bmo, drop_amc)
-    if hi <= 0:
+    if hi < min_drop:  # no collapse of at least 2 vol points: not identifiable
         return out
     ratio = hi / max(lo, 0.002) if lo > 0 else math.inf
     out["ratio"] = ratio

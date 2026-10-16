@@ -61,7 +61,7 @@ def report(df: pd.DataFrame) -> str:
              "Coverage = share of reference events the rule classifies; accuracy = agreement among those.",
              "", "| Min ratio | Coverage | Accuracy | n classified |", "| --- | --- | --- | --- |"]
     for r in (1.25, 1.5, 2.0, 3.0):
-        cls = v[(v["ratio"] >= r) & v["iv_timing"].isin(["BMO", "AMC"])]
+        cls = v[(v["ratio"] >= r) & (v[["drop_bmo", "drop_amc"]].max(axis=1) >= 0.02)]
         cls = cls.assign(t=lambda x: x["drop_bmo"].gt(x["drop_amc"]).map({True: "BMO", False: "AMC"}))
         acc = (cls["t"] == cls["ref"]).mean() if len(cls) else float("nan")
         lines.append(f"| {r} | {len(cls)/max(len(v),1):.1%} | {acc:.1%} | {len(cls)} |")
