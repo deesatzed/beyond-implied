@@ -49,9 +49,11 @@ def _cmd_ledger(args) -> int:
 
 
 def _cmd_status(args) -> int:
-    from .status import collect, write
+    from .status import collect, rows, write
 
-    if args.stdout:
+    if args.rows:
+        print(json.dumps(rows(collect()), default=str))
+    elif args.stdout:
         print(json.dumps(collect(), indent=1, default=str))
     else:
         print(write())
@@ -248,6 +250,7 @@ def main(argv: list[str] | None = None) -> int:
 
     pst = sub.add_parser("status", help="write data/logs/status.json for the monitoring dashboard")
     pst.add_argument("--stdout", action="store_true", help="print instead of writing the file")
+    pst.add_argument("--rows", action="store_true", help="print the flat table the dashboard reads")
     pst.set_defaults(func=_cmd_status)
 
     pp = sub.add_parser("power", help="simulation power analysis for the primary test")

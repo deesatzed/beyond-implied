@@ -27,3 +27,15 @@ def test_status_reads_logs_without_vendor_data(tmp_path, monkeypatch):
     assert s["ledger"]["exists"] is False
     # Nothing from inside the vendor files is read.
     assert "AAPL.json.gz" not in json.dumps(s)
+
+
+def test_rows_have_unique_keys(tmp_path, monkeypatch):
+    (tmp_path / "pyproject.toml").write_text("")
+    (tmp_path / "data" / "logs").mkdir(parents=True)
+    (tmp_path / "data" / "logs" / "daily-2026-10-16.log").write_text("=== 2026-10-16 16:25:01 EDT start\n")
+    monkeypatch.setenv("BI_ROOT", str(tmp_path))
+    r = status.rows(status.collect())
+    keys = [x["key"] for x in r]
+    assert len(keys) == len(set(keys))
+    assert r[0]["kind"] == "summary"
+    assert any(x["kind"] == "daily" and x["exit"] is None for x in r)  # started, not finished

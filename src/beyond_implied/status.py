@@ -102,7 +102,8 @@ def processes() -> list[dict]:
     procs = _run(["ps", "-axo", "pid,etime,command"])
     rows = []
     for ln in procs.splitlines():
-        if re.search(r"(\.venv/bin/bi|bin/bi) ", ln) and "grep" not in ln:
+        if (re.search(r"bin/bi (?!status)", ln) and "grep" not in ln
+                and not re.search(r"\b(osascript|sh -c|zsh -c)\b", ln)):
             pid, etime, *cmd = ln.split()
             rows.append({"pid": int(pid), "elapsed": etime,
                          "command": " ".join(c.split("/")[-1] for c in cmd)[:120]})
@@ -200,3 +201,52 @@ def write(path: Path | None = None) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(collect(), indent=1, default=str))
     return path
+
+
+def _f(x):
+    try:
+        return round(float(x), 4)
+    except (TypeError, ValueError):
+        return None
+
+
+def rows(s: dict) -> list[dict]:
+    """Flatten a status snapshot into one table of rows for the dashboard, one `kind` per section.
+
+    Every row has a unique `key`. Kinds: summary, daily, longrun, process, season.
+    """
+    res, data, git, led = s["results"], s["data"], s["git"], s["ledger"]
+    rp, tiv = res.get("real_params", {}), res.get("timing_iv", {})
+    lj = s["launchd"]
+    out = [{
+        "kind": "summary", "key": "summary", "generated_utc": s["generated_utc"], "host": s["host"],
+        "launchd_loaded": lj.get("loaded"), "launchd_last_exit": lj.get("last_exit"),
+        "launchd_schedule": lj.get("schedule"),
+        "git_head": git["head"], "git_date": git["date"], "git_subject": git["subject"],
+        "git_uncommitted": git["uncommitted"], "git_behind": git["behind_remote"],
+        "events_built": data["events_built"], "event_failures": data["event_failures"],
+        "calendar_announcements": data["calendar_announcements"],
+        "calendar_days_missing": data["calendar_days_missing"],
+        "timing_iv_rows": data["timing_iv_rows"],
+        "forward_snapshot_days": data["forward_snapshot_days"],
+        "first_snapshot": data["first_snapshot"],
+        "thetadata_cache_files": data["thetadata_cache_files"],
+        "ledger_records": led.get("n_records", 0), "ledger_ok": led.get("ok"),
+        "disk_free_gb": s["disk_free_gb"], "decision": res.get("decision"),
+        "n_usable": rp.get("n_usable"), "n_dates": rp.get("n_dates"),
+        "ratio_median": _f(rp.get("ratio_quantiles", {}).get("0.5")),
+        "timing_iv_accuracy": tiv.get("accuracy"), "timing_iv_coverage": tiv.get("coverage"),
+        "n_processes": len(s["processes"]),
+    }]
+    out += [{"kind": "daily", "key": f"daily:{r['date']}", **r} for r in s["daily_runs"]]
+    out += [{"kind": "longrun", "key": f"log:{r['log']}", **r,
+             "done": int(r["done"]) if r["done"] else None,
+             "total": int(r["total"]) if r["total"] else None} for r in s["long_runs"]]
+    out += [{"kind": "process", "key": f"pid:{r['pid']}", **r} for r in s["processes"]]
+    for r in res.get("seasons", []):
+        out.append({"kind": "season", "key": f"season:{r['season']}", "season": r["season"],
+                    "events": int(r["events"]), "usable": int(r["usable"]),
+                    **{k: _f(r[k]) for k in ("implied_event_mean", "realized_mean",
+                                             "realized_over_implied", "win_rate",
+                                             "straddle_ret_mid", "straddle_ret_exec")}})
+    return out
