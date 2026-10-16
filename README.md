@@ -7,8 +7,28 @@ information about the *size* of stock moves beyond the option market's own forec
 and it can tell when to abstain. It predicts variance, not direction, and every prediction is written
 to a hash-chained ledger before its outcome exists.
 
-> **Status: scaffold.** No results yet. The data test (BUILD.md, Phase 2) decides whether this gets built further.
+> **Status (2026-10-16): data test passed; pre-registration not yet frozen.** No forecast has been
+> evaluated. What exists so far is the data pipeline, a data-quality check, and a power analysis.
 > This is a forecasting study. It places no trades and is not investment advice.
+
+## Where it stands
+
+| | |
+| --- | --- |
+| Phase 2 data test | **Go**, with one criterion marginally missed ([report/data_test.md](report/data_test.md)) |
+| Events (100 large-cap names, 13 seasons since mid-2023) | 1,307 announcements; 1,086 usable |
+| Report timing without looking at the outcome | 99 of 100 names; the implied-volatility-collapse rule agrees with known timing on 96.1% of events ([report/timing_iv.md](report/timing_iv.md)) |
+| Unusable share | 16.9% against a 15% criterion, mostly straddle spreads wider than 25%; recorded as a miss, not redefined |
+| Power for the primary test | 93% at a 5% effect with 500 names × 13 seasons ([report/power.md](report/power.md)) |
+| Forward collection | Option snapshots every trading day after the close since 2026-10-15 |
+
+Early descriptive picture, not a test of anything: large-cap implied moves were close to fair on
+average (realized/implied ≈ 1.0), seasons swung between 0.70 and 1.23, and a one-day straddle bought
+at the ask and sold at the bid lost money in most seasons.
+
+**Next:** expand to ~500 names, freeze the pre-registration (tag `prereg-v1`), then run baselines on
+training seasons and evaluate once on held-out seasons. Target for v1: 2026-12-01.
+Progress is logged in [CHECKPOINTS.md](CHECKPOINTS.md); the plan with gates is [BUILD.md](BUILD.md).
 
 ## Why this question
 
@@ -62,16 +82,23 @@ make test
 bi indices VIX VIX3M VVIX SKEW        # download Cboe daily index history
 bi snapshot AAPL MSFT                 # save today's delayed option chains (raw JSON + hash)
 bi daily                              # after the close: chains for names with a pre/post-event close today
+bi calendar 2026-10-16                # earnings calendar for a date (Nasdaq)
+bi theta-probe AAPL 2026-07-30        # ThetaData smoke test (needs THETA_DATA_API_KEY in .env)
+bi timing-iv --names 100              # IV-collapse report timing, validated against known timing
+bi phase2 --names 100                 # build the event table and report/data_test.md
 bi power                              # simulation power analysis for the primary test
+bi power-real                         # power using parameters estimated from the real events
+bi status                             # run status for the monitoring dashboard
 bi ledger verify ledger/predictions.jsonl
 ```
 
 ## Data sources
 
 Cboe daily index history and delayed option chains (unofficial public endpoints; check terms),
-ThetaData end-of-day option history (free tier: one year; retail license is individual use, so this
-repo publishes derived statistics only, never raw vendor data), and an earnings calendar with a
-before-open/after-close flag on every event. See `docs/risks-and-data.md`.
+ThetaData end-of-day option history (free tier, back to mid-2023; the license is for individual use, so
+this repo publishes derived statistics only, never raw vendor data), the Nasdaq earnings calendar
+(past dates carry no before-open/after-close flag, hence the timing rules above), and FOMC and CPI
+dates from the Federal Reserve and BLS. See `docs/risks-and-data.md`.
 
 ## License
 
