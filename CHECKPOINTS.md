@@ -4,6 +4,26 @@ Newest first. Each checkpoint has a matching git tag `checkpoint-YYYY-MM-DD`.
 
 ---
 
+## 2026-10-16 (morning) — Timing fixed; 100-name rebuild; C1 and G8 added
+
+- IV-collapse timing validated (96.1% agreement on 763 reference events, 94.5% classified; flat
+  across thresholds) and pre-registered as the fallback timing source.
+- Rebuild: 99 of 100 names timed outcome-free; 1,233 events built, 1,086 usable. Unusable share
+  16.9% (74 untimed, 140 spread > 25%): a marginal miss of the 10–15% criterion, recorded, not
+  redefined. Sample is ~5× the power target when projected to 500 names.
+- Findings unchanged with twice the events: large-cap implied moves close to fair over 13 seasons;
+  executable one-day straddles lose in most seasons; regimes rotate (0.70–1.23).
+- Gate G8 (FOMC/CPI in the event window; dates from the Fed and BLS) added; 110 events affected.
+- Phase 9 challenger C1 (AI-elicited probabilistic network) specified: GOAL.md, spec format,
+  validator. Not part of v1.
+- Process fix: commits now gate on pytest's real exit code (one failing test slipped into 4d211dc;
+  fixed in e87f8ee).
+
+**Next:** daily snapshot check 16:35; 500-name pull overnight (timing, then events); Saturday review;
+Phase 3 freeze early next week.
+
+---
+
 ## 2026-10-16 — Phase 2 data test: conditional GO
 
 - Full run: 100 names, 13 seasons, 850 calendar days complete, 1,307 announcements.

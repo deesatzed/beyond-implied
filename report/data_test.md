@@ -1,91 +1,71 @@
 # Phase 2 data test
 
-Run 2026-10-15/16 on the Mac Mini with `bi phase2 --start 2023-07-01 --end 2026-10-14 --names 100`.
-Universe: the 100 largest names with ≥ 8 announcements since mid-2023. Raw vendor data stays local;
-this file holds derived statistics only. Tables: `report/data_test/seasons.csv`; power:
-`report/power/power_real.csv`.
+Rebuilt 2026-10-16 on the Mac Mini with `bi phase2 --start 2023-07-01 --end 2026-10-14 --names 100`,
+after adding the IV-collapse timing fallback (`report/timing_iv.md`). Universe: the 100 largest names
+with ≥ 8 announcements since mid-2023. Raw vendor data stays local; this file holds derived statistics.
+Tables: `report/data_test/seasons.csv`, `report/data_test/real_params.json`.
 
-## Decision: conditional GO
-
-Data quality, volume and power pass. Timing coverage does not yet, and it is the one thing that blocks
-freezing the pre-registration.
+## Decision: GO, with one criterion marginally missed
 
 | Gate (GOAL.md / BUILD.md) | Result | Status |
 | --- | --- | --- |
-| Calendar complete | 850 of 850 trading days, 0 missing after retries | Pass |
-| Unusable share ≤ 10–15% (events with known timing) | 98 of 763 unusable (12.8%) | Pass |
-| Timing coverage | 59 of 100 names have outcome-free timing; 544 of 1,307 events have none | **Fail (fixable)** |
-| Season averages vs ORATS | 12-quarter pattern matches; the Jan–Feb 2026 season does not (see below) | Partial |
-| Path to ~2,000 usable events | ~665 usable from 59 names over 13 seasons; ~3,300 projected at 500 names with current coverage | Pass |
-| Power for H1 (narrowed, real move shapes) | 93% at a 5% effect with 13 seasons at 500 names; size 2–3% | Pass |
+| Calendar complete | 850 of 850 trading days | Pass |
+| Outcome-free timing coverage ≥ 85% of names | 99 of 100 names; 1,233 of 1,307 announcements | Pass |
+| Unusable share ≤ 10–15% | 16.9% (221 of 1,307): 74 with no timing (5.7%), 147 failing filters (11.2%) | **Marginal miss** |
+| Season averages vs ORATS | 12-quarter pattern matches; Jan–Feb 2026 does not | Partial |
+| Path to ~2,000 usable events | 1,086 usable from 100 names; ~5,400 projected at 500 names | Pass |
 
-## What the first full run got wrong, and what changed
+**On the 16.9%:** 140 of the 147 filtered events fail only the ≤ 25% straddle-spread rule, and
+they cluster in 2025–2026 as spreads widened. These events are excluded by an explicit rule, not
+mislabeled, so the criterion's purpose (trustworthy labels) holds; the cost is sample size, and the
+sample remains far above the power target. I am not relaxing the spread rule a second time. The
+miss is recorded here and in the pre-registration rather than redefined away.
 
-1. **Timing selected on the outcome.** The first run chose before-open vs after-close by the larger
-   overnight gap, which picks the bigger move. Against the timing now used, that rule was wrong on
-   21% of events. Timing now comes from each company's habitual BMO/AMC (recorded calendar values,
-   including upcoming dates), which matched recorded timing on 10 of 10 checks. The gap rule is kept
-   as a diagnostic only.
-2. **Spread cut too tight for near-dated straddles.** Median ATM straddle spread rose from ~5.5% of
-   premium (2023) to 11–15% (2026). The forecasting sample now allows ≤ 25%; P&L statistics keep ≤ 10%.
-3. Pipeline fixes found along the way: ThetaData's 365-day limit per stock request, rejection of
-   future dates, Nasdaq rate limits (now 2 s pacing with backoff), cached `.meta.json` sidecars, and
-   mixed timestamp formats in cached files. Each has a test.
+## Timing sources
 
-## By season (usable events, outcome-free timing)
+| Source | Events | Unusable after filters |
+| --- | --- | --- |
+| Recorded on the calendar | 13 | 15.4% |
+| Company's habitual timing | 750 | 12.8% |
+| IV-collapse rule (validated 96.1%) | 470 | 10.4% |
+| No timing (excluded) | 74 | — |
+
+The outcome-based gap rule (diagnostic only, never used) agreed with the timing used on 76.2% of
+events, consistent with it selecting on the larger move.
+
+## By season (usable events)
 
 | Season | Built | Usable | Implied (event) | Realized | Realized / implied | Win rate | Straddle 1-day (mid) | Straddle 1-day (exec) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2023Q3 | 57 | 54 | 4.4% | 4.4% | 0.98 | 44% | +7.6% | +0.1% |
-| 2023Q4 | 58 | 56 | 4.2% | 5.0% | 1.19 | 57% | +20.8% | +10.9% |
-| 2024Q1 | 58 | 57 | 4.7% | 5.9% | 1.23 | 47% | +10.3% | −0.7% |
-| 2024Q2 | 59 | 57 | 5.1% | 4.6% | 0.89 | 47% | −8.2% | −20.0% |
-| 2024Q3 | 59 | 56 | 5.3% | 5.3% | 0.96 | 45% | +0.8% | −15.0% |
-| 2024Q4 | 59 | 55 | 5.1% | 5.3% | 1.02 | 42% | +1.9% | −11.5% |
-| 2025Q1 | 59 | 47 | 5.4% | 5.1% | 0.94 | 51% | +0.7% | −11.7% |
-| 2025Q2 | 59 | 44 | 5.5% | 4.1% | 0.73 | 20% | −22.7% | −32.7% |
-| 2025Q3 | 59 | 49 | 5.0% | 5.8% | 1.13 | 41% | +8.1% | −2.8% |
-| 2025Q4 | 59 | 49 | 5.1% | 4.1% | 0.78 | 31% | −13.5% | −24.2% |
-| 2026Q1 | 59 | 46 | 5.1% | 5.3% | 1.03 | 46% | −1.6% | −13.9% |
-| 2026Q2 | 59 | 51 | 5.5% | 6.3% | 1.12 | 49% | +10.8% | −2.7% |
-| 2026Q3 | 59 | 44 | 6.0% | 6.4% | 1.03 | 45% | +7.8% | −5.1% |
+| 2023Q3 | 92 | 89 | 4.3% | 4.7% | 1.07 | 48% | +10.9% | +2.8% |
+| 2023Q4 | 92 | 89 | 4.2% | 4.9% | 1.15 | 49% | +14.5% | +5.4% |
+| 2024Q1 | 88 | 86 | 5.2% | 6.3% | 1.23 | 49% | +12.8% | +1.7% |
+| 2024Q2 | 95 | 92 | 5.2% | 5.0% | 0.95 | 49% | −4.2% | −16.3% |
+| 2024Q3 | 97 | 92 | 5.3% | 5.2% | 0.95 | 47% | +0.2% | −14.2% |
+| 2024Q4 | 95 | 86 | 5.2% | 5.5% | 1.04 | 41% | +2.7% | −9.0% |
+| 2025Q1 | 96 | 78 | 5.4% | 5.0% | 0.92 | 45% | −4.8% | −16.2% |
+| 2025Q2 | 90 | 70 | 5.4% | 3.9% | 0.70 | 23% | −22.3% | −32.2% |
+| 2025Q3 | 96 | 80 | 5.0% | 5.7% | 1.13 | 43% | +7.7% | −2.3% |
+| 2025Q4 | 96 | 83 | 5.1% | 4.1% | 0.77 | 33% | −13.7% | −23.7% |
+| 2026Q1 | 97 | 76 | 5.1% | 5.2% | 1.02 | 47% | −2.6% | −14.4% |
+| 2026Q2 | 96 | 82 | 5.5% | 6.0% | 1.07 | 46% | +6.7% | −5.3% |
+| 2026Q3 | 93 | 74 | 5.8% | 6.2% | 1.02 | 45% | +5.3% | −6.6% |
+| 2026Q4 (partial) | 10 | 9 | 3.4% | 3.0% | 0.89 | 44% | −2.7% | −14.8% |
 
-Implied (event) strips the base volatility using two expiries. Win = realized move above the event-implied
+Implied (event) strips base volatility using two expiries. Win = realized move above the event-implied
 move. Straddle returns hold the pre-event ATM straddle for one day: mid to mid, and pre-event ask to
 post-event bid.
 
-**Reading it:** across 13 seasons the large-cap implied move is close to fair (realized/implied
-averages ≈ 1.0, win rate ≈ 45%), and buying the straddle at executable prices loses in most seasons.
-Seasons swing between regimes (0.73 to 1.23), as ORATS describes.
+**Reading it:** with nearly twice the events, the picture from the 59-name run holds. Large-cap
+implied moves are close to fair (realized/implied ≈ 1.0 over 13 seasons), executable one-day
+straddles lose in most seasons, and seasons rotate between regimes (0.70 to 1.23). 110 events
+(about 9%) have an FOMC statement or CPI release in the event window; gate G8 will abstain on them.
 
-**ORATS check:** ORATS reported ≈ −2% average straddle returns over twelve quarters, close to our
-roughly flat mid-to-mid average. ORATS reported ≈ +45% for the season ending February 2026; our
-2026Q1 large-cap row shows −1.6% (mid). Likely reasons: ORATS's broader universe (smaller names are
-where underpricing is strongest, per Xing & Zhang), and holding to expiry rather than one day. Not
-resolved; re-checked once the universe reaches 500 names.
+**ORATS check:** unchanged. The 12-quarter average is close to ORATS's ≈ −2%; the Jan–Feb 2026 season
+(+45% at ORATS) shows −2.6% here. Re-checked with the 500-name universe.
 
-## Timing coverage plan (blocks the pre-registration freeze)
+## Real-data parameters (for `bi power-real`)
 
-- 16 names reported before the upcoming-dates window (banks, TSM, ASML and others); 28 have upcoming
-  dates Nasdaq has not yet tagged. The daily job records timing as dates are tagged, so coverage grows
-  through the Q3 season without any extra work.
-- Add an outcome-free second source: the date the front-expiry implied volatility collapses (event
-  variance leaves the options whether the stock moves or not). Validate it against habitual timing on
-  the 59 covered names before using it on the rest.
-- Gate for Phase 3: outcome-free timing for ≥ 85% of universe names.
-
-## Power with real-data parameters
-
-Move shapes resampled from the 665 usable events (realized/implied: median 0.88, 90th percentile 2.03,
-99th 3.62), cross-sectional dispersion of log implied moves 0.48, date effect estimated ≈ 0 after
-separating event-level noise. Projected to 500 names (~14 events per announcement date). Narrowed H1:
-trailing move included as a control.
-
-| Seasons | Events | 0% (false positives) | 2% | 5% | 10% |
-| --- | --- | --- | --- | --- | --- |
-| 4 | 1,008 | 2.0% | 15% | 54% | 88% |
-| 8 | 2,016 | 3.3% | 30% | 78% | 100% |
-| 13 | 3,276 | 2.3% | 48% | 93% | 100% |
-
-Use all 13 seasons. A 2% effect remains out of reach; a null at 13 seasons would rule out effects of
-about 5% or more.
+1,086 usable events over 382 announcement dates. Dispersion of log implied moves 0.47; median implied
+move 4.5%; realized/implied median 0.88, 90th percentile 2.00, 99th 3.53. Date effect 0.29 (now
+estimable with more same-day events). The power grid is re-run after the 500-name pull.

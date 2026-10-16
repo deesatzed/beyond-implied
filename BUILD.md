@@ -82,6 +82,10 @@ timing covers 59 of 100 names; Phase 3 waits until coverage reaches ≥ 85% of n
 recording plus an implied-volatility-collapse timing rule validated on covered names. ORATS matches
 over twelve quarters but not for the Jan–Feb 2026 season (large-cap universe, one-day hold).
 
+**Update 2026-10-16: GO.** IV-collapse timing (96.1% validated) brings outcome-free timing to 99 of
+100 names; the timing blocker is cleared. Unusable share 16.9% is a recorded marginal miss (wide
+spreads), not a label-quality failure.
+
 ---
 
 ## Phase 3 — Freeze the pre-registration (half day)
