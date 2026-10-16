@@ -36,6 +36,11 @@ when = { field = "trailing_n", op = "lt", value = 4 }
 reason = "Fewer than 4 prior events; trailing baseline undefined"
 
 [[rule]]
+id = "G8-macro-event"
+when = { field = "macro_event", op = "eq", value = true }
+reason = "An FOMC statement or CPI release falls inside the event window (config/macro_events.toml)"
+
+[[rule]]
 id = "G7-stress-regime"
 all = [
   { field = "vix_vix3m", op = "gt", value = 1.0 },

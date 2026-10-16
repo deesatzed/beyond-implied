@@ -71,6 +71,9 @@ window fixed here in Phase 3. Static conformal is reported as the comparison.
 
 ## Gate constraints
 
+Gate G8 abstains when an FOMC statement or CPI release falls on the post-event date (dates in
+`config/macro_events.toml`, sourced from the Federal Reserve and BLS). Hashed with the gates at the freeze.
+
 No regime (chaos/entropy) feature drives a gate in v1. Gate rules are frozen with this file.
 
 ## Multiple comparisons

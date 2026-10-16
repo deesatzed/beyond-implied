@@ -20,8 +20,10 @@ prediction in the ledger.
 
 - `engine.py`: rules loaded from `config/gates.toml`; operators `eq, ne, lt, le, gt, ge, in, not_in,
   is_null, not_null`; `all = [...]` for conjunctions; no `eval`.
-- Draft rules G1–G7: unknown timing, zero bid, wide spread, low price, thin options, short history,
-  and a stress-regime gate (inverted VIX term structure with high VVIX).
+- Draft rules G1–G8: unknown timing, zero bid, wide spread, low price, thin options, short history,
+  a stress-regime gate (inverted VIX term structure with high VVIX), and a macro-event gate (an FOMC
+  statement or CPI release on the post-event date; dates sourced from the Fed and BLS in
+  `config/macro_events.toml`).
 
 ## Build steps
 

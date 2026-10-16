@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from .invariants import check_event
+from .macro import macro_in_window
 from .moves import (
     SQRT_2_OVER_PI,
     event_variance_two_expiry,
@@ -74,6 +75,7 @@ def build_event(symbol: str, announce: dt.date, timing: str, ohlc: pd.DataFrame,
     row.update(pre_date=pre_ts, post_date=post_ts, spot=spot, pre_close=spot,
                post_close=float(ohlc.loc[post_ts, "close"]))
     row["realized_move"] = realized_move(spot, row["post_close"])
+    row.update(macro_in_window(post_ts))
 
     cpre = chain[chain["date"] == pre_ts]
     cpost = chain[chain["date"] == post_ts]

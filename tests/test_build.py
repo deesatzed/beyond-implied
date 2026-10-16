@@ -66,3 +66,11 @@ def test_season_table():
     t = season_table(ev).set_index("season")
     assert t.loc["2026Q1", "events"] == 2 and t.loc["2026Q1", "win_rate"] == 0.5
     assert season_label("2026-11-03") == "2026Q4"
+
+
+def test_macro_window():
+    from beyond_implied.events.macro import macro_in_window
+
+    assert macro_in_window("2024-11-07")["macro_fomc"]            # FOMC statement day
+    assert macro_in_window("2026-10-14")["macro_cpi"]             # CPI release day
+    assert not macro_in_window("2026-10-15")["macro_event"]
