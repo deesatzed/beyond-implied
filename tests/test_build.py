@@ -1,6 +1,7 @@
 import datetime as dt
 import math
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -74,3 +75,29 @@ def test_macro_window():
     assert macro_in_window("2024-11-07")["macro_fomc"]            # FOMC statement day
     assert macro_in_window("2026-10-14")["macro_cpi"]             # CPI release day
     assert not macro_in_window("2026-10-15")["macro_event"]
+
+
+def _iv_chain(vols, spot=100.0):
+    """Chain for D-1, D, D+1 with one expiry; straddle priced from the given ATM vols."""
+    days = pd.to_datetime(["2026-10-28", "2026-10-29", "2026-10-30"])
+    exp = pd.Timestamp("2026-11-06")
+    rows = []
+    for d, v in zip(days, vols):
+        t = max(int(np.busday_count(d.date(), exp.date())), 1) / 252
+        mid = math.sqrt(2 / math.pi) * spot * v * math.sqrt(t)
+        for cp in "CP":
+            rows.append({"date": d, "expiry": exp, "cp": cp, "strike": 100.0,
+                         "bid": mid / 2 - 0.01, "ask": mid / 2 + 0.01})
+    closes = pd.Series([100.0] * 3, index=days)
+    return pd.DataFrame(rows), closes
+
+
+def test_iv_collapse_timing():
+    from beyond_implied.events.timing_iv import iv_collapse_timing
+
+    chain, closes = _iv_chain([0.80, 0.30, 0.28])     # crush into D's close
+    assert iv_collapse_timing(chain, closes, dt.date(2026, 10, 29))["timing"] == "BMO"
+    chain, closes = _iv_chain([0.80, 0.82, 0.30])     # crush into D+1's close
+    assert iv_collapse_timing(chain, closes, dt.date(2026, 10, 29))["timing"] == "AMC"
+    chain, closes = _iv_chain([0.30, 0.30, 0.30])     # no crush
+    assert iv_collapse_timing(chain, closes, dt.date(2026, 10, 29))["timing"] == "UNKNOWN"

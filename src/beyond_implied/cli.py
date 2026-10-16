@@ -143,6 +143,22 @@ def _cmd_power_real(args) -> int:
     return 0
 
 
+def _cmd_timing_iv(args) -> int:
+    import datetime as dt
+
+    import pandas as pd
+
+    from .config import data_dir
+    from .timing_iv_run import report, run
+
+    if args.report_only:
+        df = pd.read_csv(data_dir() / "processed" / "timing_iv.csv.gz")
+    else:
+        df = run(dt.date.fromisoformat(args.start), dt.date.fromisoformat(args.end), args.names)
+    print(report(df))
+    return 0
+
+
 def _cmd_power(args) -> int:
     from pathlib import Path
 
@@ -206,6 +222,13 @@ def main(argv: list[str] | None = None) -> int:
     p2.add_argument("--symbols", help="comma-separated list instead of the auto universe")
     p2.add_argument("--report-only", action="store_true")
     p2.set_defaults(func=_cmd_phase2)
+
+    pv = sub.add_parser("timing-iv", help="IV-collapse timing for all events, with validation")
+    pv.add_argument("--start", default="2023-07-01")
+    pv.add_argument("--end", default="2026-10-14")
+    pv.add_argument("--names", type=int, default=100)
+    pv.add_argument("--report-only", action="store_true")
+    pv.set_defaults(func=_cmd_timing_iv)
 
     pr = sub.add_parser("power-real", help="power grid using real-data parameters (after phase2)")
     pr.add_argument("--sims", type=int, default=300)
