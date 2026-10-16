@@ -93,7 +93,7 @@ def long_runs(logs: Path) -> list[dict]:
             "done": prog.group(1) if prog else None, "total": prog.group(2) if prog else None,
             "current": prog.group(3) if prog else None,
             "minutes": float(prog.group(4)) if prog else None,
-            "last_line": last[:160],
+            "last_line": last.replace(str(Path.home()), "~")[:160],
         })
     return out[:8]
 
