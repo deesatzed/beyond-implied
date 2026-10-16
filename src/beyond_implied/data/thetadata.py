@@ -71,11 +71,14 @@ def _to_pandas(df) -> pd.DataFrame:
 
 
 def _naive_dates(s: pd.Series) -> pd.Series:
-    """Report timestamps -> naive local calendar dates (drops any timezone, keeps wall time)."""
-    t = pd.to_datetime(s)
-    if t.dt.tz is not None:
-        t = t.dt.tz_localize(None)
-    return t.dt.normalize()
+    """Report timestamps -> calendar dates in the report's own (exchange) time.
+
+    Cached CSVs mix precision and UTC offsets (-04:00/-05:00), so parse the leading date only.
+    """
+    if pd.api.types.is_datetime64_any_dtype(s):
+        t = s.dt.tz_localize(None) if s.dt.tz is not None else s
+        return t.dt.normalize()
+    return pd.to_datetime(s.astype(str).str.slice(0, 10), format="%Y-%m-%d")
 
 
 _RIGHT = {"C": "C", "CALL": "C", "P": "P", "PUT": "P"}

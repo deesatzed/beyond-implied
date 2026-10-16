@@ -58,3 +58,10 @@ def test_stock_ohlc_chunks_long_ranges(monkeypatch, tmp_path):
                                    min_interval=0, cache=False)
     assert len(calls) == 4
     assert out.index.min() == pd.Timestamp("2023-06-01") and out.index.is_unique
+
+
+def test_naive_dates_mixed_offsets_and_precision():
+    s = pd.Series(["2023-12-26 17:16:22-05:00", "2024-07-30 17:15:00.123-04:00", "2026-07-30T17:15:00.000"])
+    out = thetadata._naive_dates(s)
+    assert out.tolist() == [pd.Timestamp("2023-12-26"), pd.Timestamp("2024-07-30"),
+                            pd.Timestamp("2026-07-30")]
