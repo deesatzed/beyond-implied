@@ -24,9 +24,26 @@ def _cached(date: dt.date):
     return files[-1] if files else None
 
 
-def calendar_range(start: dt.date, end: dt.date, *, pause: float = 0.8,
+MISSING: list[str] = []
+
+
+def _fetch_with_retry(d: dt.date, s: requests.Session, backoff=(30, 120, 300)) -> pd.DataFrame:
+    for i, wait in enumerate((*backoff, None)):
+        try:
+            return fetch_nasdaq_calendar(d, session=s)
+        except (requests.RequestException, ValueError) as e:
+            if wait is None:
+                raise
+            print(f"calendar {d}: {type(e).__name__}; retry {i + 1} in {wait}s", flush=True)
+            time.sleep(wait)
+    raise RuntimeError("unreachable")
+
+
+def calendar_range(start: dt.date, end: dt.date, *, pause: float = 2.0,
                    log_every: int = 50) -> pd.DataFrame:
+    """Days that still fail after retries are listed in MISSING and reported, never silently dropped."""
     s = requests.Session()
+    MISSING.clear()
     frames, d, n = [], start, 0
     while d <= end:
         if is_trading_day(d):
@@ -35,10 +52,11 @@ def calendar_range(start: dt.date, end: dt.date, *, pause: float = 0.8,
                 if path:
                     frames.append(parse_nasdaq_calendar(json.loads(path.read_bytes()), d))
                 else:
-                    frames.append(fetch_nasdaq_calendar(d, session=s))
+                    frames.append(_fetch_with_retry(d, s))
                     time.sleep(pause)
             except (requests.RequestException, ValueError) as e:
-                print(f"calendar {d}: {type(e).__name__} {str(e)[:120]}", flush=True)
+                MISSING.append(d.isoformat())
+                print(f"calendar {d}: MISSING after retries ({type(e).__name__})", flush=True)
             n += 1
             if n % log_every == 0:
                 print(f"calendar: {n} trading days through {d}", flush=True)

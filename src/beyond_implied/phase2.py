@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 from .config import data_dir, project_root, universe_config
-from .data.calendar_history import calendar_range, select_universe
+from .data.calendar_history import MISSING, calendar_range, select_universe
 from .data.quality import passes_universe
 from .data.thetadata import eod_option_chain, eod_stock_ohlc
 from .events.build import build_event, infer_timing, season_label
@@ -36,6 +36,10 @@ def build_events(start: dt.date, end: dt.date, n_names: int = 100, max_dte: int 
     t0 = time.time()
     cal = calendar_range(start, end)
     cal.to_csv(_processed() / "calendar_hist.csv.gz", index=False, compression="gzip")
+    (_processed() / "calendar_missing.txt").write_text("\n".join(MISSING))
+    if len(MISSING) > 5:
+        raise RuntimeError(f"{len(MISSING)} calendar days missing after retries; rerun later "
+                           "(cached days are reused)")
     universe = symbols or select_universe(cal, n_names)
     print(f"calendar rows {len(cal)}; universe {len(universe)} names; {time.time()-t0:.0f}s",
           flush=True)
