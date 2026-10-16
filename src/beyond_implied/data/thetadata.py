@@ -124,8 +124,23 @@ def eod_option_chain(root: str, start: dt.date, end: dt.date | None = None, *,
     return normalize_option_eod(raw, root) if not raw.empty else raw
 
 
+MAX_DAYS_PER_REQUEST = 365  # ThetaData rejects longer stock EOD ranges
+
+
 def eod_stock_ohlc(symbol: str, start: dt.date, end: dt.date, *, min_interval: float = 2.5,
                    cache: bool = True) -> pd.DataFrame:
+    """Daily OHLC; ranges longer than 365 days are split into chunks and joined."""
+    if (end - start).days > MAX_DAYS_PER_REQUEST - 1:
+        parts, a = [], start
+        while a <= end:
+            b = min(a + dt.timedelta(days=MAX_DAYS_PER_REQUEST - 1), end)
+            parts.append(eod_stock_ohlc(symbol, a, b, min_interval=min_interval, cache=cache))
+            a = b + dt.timedelta(days=1)
+        parts = [p for p in parts if not p.empty]
+        if not parts:
+            return pd.DataFrame(columns=["open", "high", "low", "close", "volume"])
+        out = pd.concat(parts).sort_index()
+        return out[~out.index.duplicated(keep="last")]
     path = _cache_path("stock_eod", f"{symbol.upper()}_{start.isoformat()}_{end.isoformat()}.csv.gz")
     if cache and path.exists():
         raw = pd.read_csv(path)

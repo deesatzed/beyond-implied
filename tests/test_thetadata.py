@@ -37,3 +37,24 @@ def test_normalize_option_eod():
     assert out["root"].iloc[0] == "AAPL"
     assert out["date"].iloc[0] == pd.Timestamp("2026-07-30")
     assert out["expiry"].iloc[0] == pd.Timestamp("2026-07-31")
+
+
+def test_stock_ohlc_chunks_long_ranges(monkeypatch, tmp_path):
+    import datetime as dt
+
+    monkeypatch.setenv("BI_ROOT", str(tmp_path))
+    calls = []
+
+    class Fake:
+        def stock_history_eod(self, symbol, start_date, end_date):
+            assert (end_date - start_date).days <= 364
+            calls.append((start_date, end_date))
+            days = pd.bdate_range(start_date, end_date)
+            return pd.DataFrame({"created": days, "open": 1.0, "high": 1.0, "low": 1.0,
+                                 "close": 1.0, "volume": 1})
+
+    monkeypatch.setattr(thetadata, "client", lambda: Fake())
+    out = thetadata.eod_stock_ohlc("AAPL", dt.date(2023, 6, 1), dt.date(2026, 10, 15),
+                                   min_interval=0, cache=False)
+    assert len(calls) == 4
+    assert out.index.min() == pd.Timestamp("2023-06-01") and out.index.is_unique
