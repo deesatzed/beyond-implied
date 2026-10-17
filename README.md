@@ -19,7 +19,7 @@ to a hash-chained ledger before its outcome exists.
 | Events (500 largest names, 13 seasons since mid-2023) | 6,390 announcements; 4,148 usable |
 | Report timing without looking at the outcome | 484 of 500 names; the implied-volatility-collapse rule agrees with known timing on 93.8% of events ([report/timing_iv.md](report/timing_iv.md)) |
 | Unusable share | 35.1% against a 15% criterion: 5.9% label-quality failures, the rest the liquidity rules; not redefined |
-| Power for the primary test | 93% at a 5% effect with 500 names × 13 seasons ([report/power.md](report/power.md)) |
+| Power for the primary test | 87% at a 5% effect if all 13 seasons are scored out of sample; about 40% with a 3–4-season held-out set ([report/power.md](report/power.md)) |
 | Forward collection | Option snapshots every trading day after the close since 2026-10-15 |
 
 Early descriptive picture, not a test of anything: across 500 names, realized moves fell short of

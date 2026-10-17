@@ -244,7 +244,7 @@ def main(argv: list[str] | None = None) -> int:
 
     pr = sub.add_parser("power-real", help="power grid using real-data parameters (after phase2)")
     pr.add_argument("--sims", type=int, default=300)
-    pr.add_argument("--names", type=int, default=100, help="names in the real event table")
+    pr.add_argument("--names", type=int, default=500, help="names in the real event table")
     pr.add_argument("--target-names", type=int, default=500, help="universe size to project")
     pr.set_defaults(func=_cmd_power_real)
 

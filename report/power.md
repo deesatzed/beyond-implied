@@ -68,3 +68,28 @@ It helps; it does not solve it. Fix γ and the calibration window in the pre-reg
   which lowers power. Treat these numbers as an upper bound.
 - The effect-size scale is a modeling choice. What matters is the ordering: sample size beyond
   ~2,000 events buys little for large effects and cannot rescue small ones.
+
+## Real-data power at 500 names (2026-10-17)
+
+`bi power-real --names 500 --target-names 500`, using parameters and the realized/implied move shape
+estimated from the 4,148 usable events (`report/data_test/real_params.json`): about 7 usable events
+per announcement date, 43 dates per season. 300 simulations per cell. The trailing move is included
+as a control.
+
+| Planted effect | 4 seasons (1,204 events) | 8 seasons (2,408) | 13 seasons (3,913) |
+| --- | --- | --- | --- |
+| None (false-positive rate) | 3.0% | 3.0% | 3.0% |
+| 2% | 10% | 24% | 28% |
+| 5% | 39% | 65% | 87% |
+| 10% | 82% | 98% | 100% |
+
+The earlier figure (93% at a 5% effect) assumed 500 names would give five times the 100-name event
+count per date. The real 500-name table has fewer usable events per name, because smaller names fail
+the liquidity rules more often. A first run on 2026-10-17 repeated that ×5 scaling by mistake and was
+discarded; `--names` now defaults to 500.
+
+**Design consequence for Phase 3.** The 87% figure needs all 13 seasons scored out of sample. With a
+held-out set of only the last two retrospective seasons plus the forward season (about 3–4 seasons),
+power at a 5% effect is about 40%. The split must be settled before the freeze. One option is a
+rolling-origin evaluation: each season predicted by a model fit only on earlier seasons, so every
+scored season is out of sample. The other is to accept low power on a small held-out set and say so.

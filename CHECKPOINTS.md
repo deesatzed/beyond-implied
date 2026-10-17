@@ -20,7 +20,12 @@ Newest first. Each checkpoint has a matching git tag `checkpoint-YYYY-MM-DD`.
 - Daily snapshot Fri: 13 of 14 names (PAC has no Cboe chain). Dashboard refresh moved into this
   session after the scheduled-task version failed silently.
 
-**Decisions needed before Phase 3:** the population definition (option 1, 2 or 3); how the ORATS gap
+- Real-data power at 500 names: 87% at a 5% effect over 13 seasons (false positives 3%); about 40%
+  over 4 seasons. The earlier 93% assumed 5× the events per date. A first rerun repeated that
+  scaling by mistake; it was caught and discarded.
+
+**Decisions needed before Phase 3:** the population definition (option 1, 2 or 3); the held-out
+design (rolling-origin over all seasons, or a small held-out set with low power); how the ORATS gap
 is resolved.
 
 ---
