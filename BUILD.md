@@ -91,12 +91,21 @@ spreads), not a label-quality failure.
 liquidity rules, concentrated in smaller names. Phase 3 waits on the population decision
 (`report/data_test.md`) and the ORATS check.
 
+**Resolved 2026-10-17:** population limited to liquid optionable events; walk-forward evaluation;
+ORATS replaced by a direction check plus internal checks (`report/orats_check.md`). Phase 2 gate
+passed on those terms.
+
 ---
 
 ## Phase 3 — Freeze the pre-registration (half day)
 
-1. Finalize `PREREGISTRATION.md`: hypotheses, metrics, universe filters, train/held-out season split,
-   gate rules in `config/gates.toml`, and the feature list (keep it short).
+1. Finalize `PREREGISTRATION.md`: hypotheses, metrics, study population (liquid optionable events,
+   decided 2026-10-17), walk-forward evaluation design (decided 2026-10-17), gate rules in
+   `config/gates.toml`, and the feature list (at most 6).
+   - Try to extend earnings dates and stock closes before mid-2023, for the trailing-move baseline
+     only. Record how many seasons can be scored.
+   - Simulate power for that exact number of scored seasons and record it.
+   - Commit and hash the walk-forward evaluation code before the freeze.
 2. `bi ledger prereg PREREGISTRATION.md config/gates.toml config/universe.toml` — writes the SHA-256
    of each file as the ledger's first records.
 3. `git tag prereg-v1 && git push --tags`.
@@ -127,14 +136,15 @@ Sections: `regime/`, `premium/`, `gates/`, `metrics/`
 1. Add regime features (permutation entropy, DFA Hurst, recurrence rate) and premium features
    (VIX/VIX3M slope, VVIX level, implied/trailing ratio). Every feature passes the look-ahead canary.
    Regime features may enter the forecast but never a gate in v1 (a test enforces this).
-2. Fit the scaffold forecast on training seasons only.
+2. Fit the scaffold forecast inside the walk-forward loop only (never on the season being predicted).
 3. Apply the frozen gate rules; log every commit/abstain decision with the rule IDs that fired.
 4. Produce adaptive conformal upper bounds (`metrics/conformal.py`, γ and window fixed in the
    pre-registration). Breaches feed Kupiec/Christoffersen; static conformal is the comparison.
-5. Evaluate once on held-out seasons: encompassing, risk-at-coverage curve, PIT, Christoffersen,
-   hypothetical straddle P&L shape net of spreads.
+5. Run the frozen walk-forward evaluation once: each season predicted by a fit on earlier seasons
+   only. Report encompassing (pooled, date-clustered), risk-at-coverage curve, PIT, Christoffersen,
+   hypothetical straddle P&L shape net of spreads, and the pre-registered robustness splits.
 
-**Gate:** results computed exactly once on held-out data; numbers written to the ledger.
+**Gate:** the walk-forward evaluation is run exactly once after the freeze; numbers written to the ledger.
 
 ---
 

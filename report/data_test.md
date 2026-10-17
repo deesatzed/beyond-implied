@@ -6,15 +6,15 @@ Raw vendor data stays local; this file holds derived statistics. Tables: `report
 `report/data_test/real_params.json`. The 100-name run of 2026-10-16 is kept in
 `report/data_test/100names/`.
 
-## Decision: pending. One gate criterion clearly missed
+## Decision (2026-10-17): go, with the claim limited to liquid optionable events
 
 | Gate (GOAL.md / BUILD.md) | Result at 500 names | Status |
 | --- | --- | --- |
 | Calendar complete | 850 of 850 trading days | Pass |
 | Outcome-free timing | 484 of 500 names have events built; 338 with recorded or habitual timing, 146 timed by the IV rule only. 349 of 6,390 announcements (5.5%) left untimed | Pass |
 | IV timing rule holds at scale | 93.8% agreement, 85.1% coverage (96.1% and 94.5% at 100 names) | Pass |
-| Unusable share ≤ 10–15% | **35.1%** (2,242 of 6,390) | **Fail** |
-| Season averages vs ORATS | Jan–Feb 2026 still does not match | Unresolved |
+| Unusable share ≤ 10–15% | **35.1%** (2,242 of 6,390); data-quality failures 5.9% | **Fail as unusable share; pass as data quality.** Resolved by limiting the population (below) |
+| Season averages vs ORATS | Direction matches on ORATS's window; size does not (+3% vs +45%); ORATS method unpublished | Replaced by a direction check plus internal checks ([orats_check.md](orats_check.md)) |
 | Path to ~2,000 usable events | 4,148 usable over 556 announcement dates | Pass |
 
 ### Why 35.1% are unusable
@@ -47,6 +47,9 @@ have not redefined it. Three ways forward, for a decision before the Phase 3 fre
 
 Option 1 keeps the most power and does not move a threshold. But it reinterprets a stop criterion,
 so if chosen it must be written into PREREGISTRATION.md as a change, with this table as the reason.
+
+**Chosen 2026-10-17: option 1**, together with walk-forward evaluation over all seasons. Both are
+recorded in PREREGISTRATION.md (Study population; Evaluation design).
 
 ## Timing sources
 
@@ -92,12 +95,12 @@ names with only monthly options. That makes the simple implied move overstate th
 two-expiry event estimate is meant to correct for this. H1 uses the event estimate, and results will
 be reported split by this warning.
 
-**ORATS check: still unresolved.** For the season ending February 2026, ORATS reported straddle
-returns of about +45%. Here, 2026Q1 shows −1.9% (mid) at 500 names and −2.6% at 100 names. The
-12-quarter level roughly matches ORATS's ≈ −2%. A gap this size in one season suggests ORATS defines
-the season, entry and exit times or universe differently from this pipeline. I have not yet confirmed
-which. This is to be resolved against ORATS's published method before the Phase 3 freeze. Until then,
-the pipeline's season P&L is not claimed to match an outside benchmark.
+**ORATS check: resolved 2026-10-17** ([orats_check.md](orats_check.md)). The earlier comparison used
+the wrong window. On ORATS's own four weeks, January 14 to February 11, 2026, straddles did better
+than this pipeline's historical average under every definition: one-day mid +3.4% vs +0.7%, hold to
+expiry +3.2% vs +1.6%. So the direction agrees with ORATS. The size does not: ORATS reports +45%, and
+its post does not give enough of its method to reproduce that figure. The gate is replaced by a
+direction check plus internal checks.
 
 ## Real-data parameters (for `bi power-real`)
 

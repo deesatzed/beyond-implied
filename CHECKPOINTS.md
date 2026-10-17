@@ -4,6 +4,27 @@ Newest first. Each checkpoint has a matching git tag `checkpoint-YYYY-MM-DD`.
 
 ---
 
+## 2026-10-17 (afternoon) — Decisions: liquid population, walk-forward evaluation, ORATS resolved
+
+- **Population (1A):** claims are limited to earnings events with liquid listed options. The
+  stop-criterion reading (data quality, 5.9%, versus unusable share, 35.1%) is recorded as a
+  post-data clarification in PREREGISTRATION.md.
+- **Evaluation (2B):** walk-forward over all seasons. Each season is predicted from a fit on earlier
+  seasons only, with a minimum of 2 training seasons; up to 11 seasons are scored. The forward-live
+  season is a separate confirmatory check.
+- **ORATS:** the earlier comparison used the wrong window. On ORATS's four weeks, the direction
+  agrees under every definition, but the size does not (+3% vs +45%), and ORATS's method is not
+  published. The gate is replaced by a direction check plus internal checks (`report/orats_check.md`).
+- **Found while checking:** habitual timing disagrees with the IV rule on 3.9% of habitually timed
+  events, and those events show more very small moves. Added as a pre-registered robustness split,
+  not a rule change.
+
+**Before the freeze:** try to extend pre-2023 earnings dates and stock closes for the trailing
+baseline; simulate power for the exact scored-season count; commit the walk-forward code; tag
+`prereg-v1`. Then the landing page.
+
+---
+
 ## 2026-10-17 — 500-name pull: one gate criterion clearly missed
 
 - Overnight run (Fri 16:35 to Sat 02:51 ET): 6,390 announcements, 6,010 events built, **4,148 usable**

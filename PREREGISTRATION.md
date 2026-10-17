@@ -9,11 +9,11 @@ and tagging `prereg-v1`. Any change after that is a new version with its own tag
   `|r_i| = a + b_model · F_model,i + b_imp · IM_i + b_tr · F_trailing,i + e_i`,
   where `|r_i|` is the realized absolute move, `F_model` the scaffold forecast, `IM` the implied move
   and `F_trailing` the trailing mean absolute move, `b_model > 0` at the 5% level with standard
-  errors clustered by announcement date, on held-out seasons.
+  errors clustered by announcement date, on walk-forward out-of-sample forecasts (Evaluation design).
   *Narrowed 2026-10-15 (docs/prior-art.md):* that trailing moves add information beyond the implied
   move is already published, so the benchmark includes both.
 - **H2 (secondary).** Area under the risk-coverage curve (QLIKE loss) for the scaffold with gates is lower
-  than for the best baseline, on held-out seasons.
+  than for the best baseline, on the same walk-forward forecasts.
 - **H3 (exploratory, control arena).** Scaffold features add information to HAR-IV for S&P 500
   21-day realized variance. Reported whatever the result; no claim rests on it.
 
@@ -36,12 +36,28 @@ and tagging `prereg-v1`. Any change after that is a new version with its own tag
 - Implied move: at-the-money straddle mid / spot at the pre-event close, using the first expiry after
   the event; secondary definition strips residual time value using two expiries (`events/` GOAL.md).
 
-## Universe filters (config/universe.toml)
+## Study population (config/universe.toml)
+
+*Decided 2026-10-17 (option 1A in `report/data_test.md`).* Every claim is limited to **earnings events
+with liquid listed options** among the 500 largest names with ≥ 8 announcements since mid-2023. An
+event is in the population when, at the pre-event close:
 
 - Underlying price ≥ $10; option volume ≥ 300 contracts on the pre-event day.
-- Straddle relative spread ≤ 25% of premium for the forecasting sample; ≤ 10% for any P&L
-  statistic; zero bids excluded. *Changed 2026-10-15 (draft):* the median ATM spread rose from
-  ~5.5% (2023) to 11–15% (2026) as nearer expiries appeared; a 10% cut removed 39% of events.
+- Straddle relative spread ≤ 25% of premium, and no zero bid on either leg. P&L statistics use the
+  stricter ≤ 10% spread subset. *Changed 2026-10-15 (draft):* the median ATM spread rose from about
+  5.5% (2023) to 11–15% (2026) as nearer expiries appeared, and a 10% cut removed 39% of events.
+- Outcome-free timing exists (recorded, habitual or IV-collapse; see Event definition).
+
+All of these use only pre-event information. At 500 names they exclude 35.1% of announcements:
+5.9% for data-quality reasons (no timing, missing data) and about 29% for liquidity. The exclusion
+falls more on smaller companies (12% of the largest market-cap quintile, 46% of the smallest), so the
+population leans toward larger names. Results are not claimed for illiquid events.
+
+**Stop-criterion clarification (recorded, not hidden).** GOAL.md's stop criterion reads "more than
+about 10–15% of events fail data-quality checks"; BUILD.md paraphrased it as "unusable events". At
+5.9% the data-quality reading passes and the unusable reading fails. This clarification was made
+after seeing the 500-name data. It is recorded here, with `report/data_test.md` as the evidence,
+instead of being presented as the original intent.
 
 ## Baselines
 
@@ -57,17 +73,51 @@ and tagging `prereg-v1`. Any change after that is a new version with its own tag
 - Decision: risk-at-coverage curve; hypothetical straddle P&L net of half-spread, judged by skew,
   expected shortfall (worst 1%), and max drawdown.
 
-## Split
+## Evaluation design: walk-forward over all seasons
 
-- Training seasons: TBD in Phase 3 (all but the last two retrospective seasons).
-- Held-out: the last two retrospective seasons plus the forward-live season.
-- Held-out data is evaluated exactly once.
+*Decided 2026-10-17 (option 2B), replacing a single small held-out set, which had about 40% power at a
+5% effect (`report/power.md`).*
+
+- Seasons are calendar quarters of the announcement date (2023Q3 to 2026Q3, 13 complete seasons).
+- For each scored season *s*, every quantity the model learns (coefficients, gate thresholds that
+  are fit, calibration constants) is estimated only from events in seasons before *s*. Season *s*
+  is then predicted once. Nothing estimated on season *s* or later is ever used to predict *s*.
+- Minimum training history: 2 seasons. Scored seasons: from 2024Q1 to 2026Q3 (11 seasons), subject
+  to the trailing-move requirement below.
+- The trailing-move baseline needs ≥ 4 prior events per name. Earnings dates and stock closes before
+  mid-2023 are needed only for it (no option data). If they are obtainable, they are used, and all
+  11 seasons are scored. If not, scoring starts at the first season where ≥ 80% of population events
+  have a trailing value, and the number of scored seasons is reported.
+- H1 is one encompassing regression pooled over all scored seasons' out-of-sample forecasts, with
+  standard errors clustered by announcement date. Per-season coefficients are reported as
+  descriptive only.
+- The model specification, the feature list (at most 6), the gate rules, the walk-forward
+  procedure and the minimum-history rule are frozen at `prereg-v1`. The walk-forward evaluation is
+  run once after the freeze. Its code is committed and hashed before it runs.
+- The forward-live season (predictions written to the ledger before each announcement, from
+  2026-10-15) is scored separately as a confirmatory check. It cannot be revised.
 
 ## Sample size
 
-From the simulation power analysis (`report/power.md`): target ≥ 2,000 usable events over
-≥ 140 announcement dates (80% power for a 5% effect). The achieved count is reported; if it falls
-short, H1 is still run and reported with its power at the achieved size.
+4,148 usable events over 556 announcement dates at 500 names (`report/data_test.md`). Real-data power
+(`report/power.md`) at a 5% effect: 87% with 13 scored seasons, 65% with 8. Before the freeze, power
+is simulated for the exact number of scored seasons and recorded here. If the result is null, it is
+reported with that power.
+
+## Robustness reported with H1 (not separate tests)
+
+- By timing source (recorded, habitual, IV-collapse). Also excluding the events where habitual and
+  IV-collapse timing disagree: about 4% of habitually timed events. Those events show more very
+  small moves, consistent with occasional wrong-day measurement.
+- By I4 warning (first expiry far from the event) and by market-cap tercile.
+- Excluding events with an FOMC or CPI release in the window (gate G8).
+
+## Outside benchmark check (ORATS)
+
+*Changed 2026-10-17.* GOAL.md's criterion "season averages roughly match ORATS" cannot be applied as
+written, because ORATS's post does not publish its holding period, pricing convention, universe size
+or averaging method. It is replaced with a direction check plus internal checks; the details are in
+`report/orats_check.md`.
 
 ## Prediction bounds
 

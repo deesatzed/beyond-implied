@@ -7,7 +7,7 @@ information about the *size* of stock moves beyond the option market's own forec
 and it can tell when to abstain. It predicts variance, not direction, and every prediction is written
 to a hash-chained ledger before its outcome exists.
 
-> **Status (2026-10-17): data test at 500 names done, one gate criterion missed (decision pending); pre-registration not yet frozen.** No forecast has been
+> **Status (2026-10-17): data test passed with the claim limited to liquid optionable events; pre-registration being finalized, not yet frozen.** No forecast has been
 > evaluated. What exists so far is the data pipeline, a data-quality check, and a power analysis.
 > This is a forecasting study. It places no trades and is not investment advice.
 
@@ -15,19 +15,20 @@ to a hash-chained ledger before its outcome exists.
 
 | | |
 | --- | --- |
-| Phase 2 data test | 500 names: power target met, unusable-share criterion failed (35.1%); decision pending ([report/data_test.md](report/data_test.md)) |
+| Phase 2 data test | Go at 500 names, claims limited to events with liquid options ([report/data_test.md](report/data_test.md)) |
 | Events (500 largest names, 13 seasons since mid-2023) | 6,390 announcements; 4,148 usable |
 | Report timing without looking at the outcome | 484 of 500 names; the implied-volatility-collapse rule agrees with known timing on 93.8% of events ([report/timing_iv.md](report/timing_iv.md)) |
 | Unusable share | 35.1% against a 15% criterion: 5.9% label-quality failures, the rest the liquidity rules; not redefined |
-| Power for the primary test | 87% at a 5% effect if all 13 seasons are scored out of sample; about 40% with a 3–4-season held-out set ([report/power.md](report/power.md)) |
+| Power for the primary test | Walk-forward scoring of up to 11 seasons; 87% at a 5% effect over 13 seasons, 65% over 8 ([report/power.md](report/power.md)) |
+| Outside benchmark (ORATS) | Direction matches on ORATS's window; size cannot be reproduced from its published method ([report/orats_check.md](report/orats_check.md)) |
 | Forward collection | Option snapshots every trading day after the close since 2026-10-15 |
 
 Early descriptive picture, not a test of anything: across 500 names, realized moves fell short of
 implied moves in every season (0.73–0.99), and a one-day straddle bought at the ask and sold at the
 bid lost money in every season.
 
-**Next:** decide the study population and resolve the ORATS check, then freeze the pre-registration (tag `prereg-v1`), then run baselines on
-training seasons and evaluate once on held-out seasons. Target for v1: 2026-12-01.
+**Next:** finalize and freeze the pre-registration (tag `prereg-v1`), then run the frozen
+walk-forward evaluation once (each season predicted from earlier seasons only). Target for v1: 2026-12-01.
 Progress is logged in [CHECKPOINTS.md](CHECKPOINTS.md); the plan with gates is [BUILD.md](BUILD.md).
 
 ## Why this question

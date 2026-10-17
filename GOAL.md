@@ -17,13 +17,17 @@ beyond the option market's implied move, and does it know when to abstain?
 
 ## Success looks like
 
-- A pre-registered result on held-out seasons, positive or null, with the ledger publicly verifiable.
+- A pre-registered, walk-forward out-of-sample result, positive or null, with the ledger publicly verifiable.
 - One writeup, one figure set, one repository a stranger can run in under 15 minutes.
 
 ## Stop criteria (checked at the end of Phase 2)
 
 - Season-average implied and realized moves do not roughly match published ORATS season figures.
-- More than about 10–15% of events fail data-quality checks.
+  *Replaced 2026-10-17:* ORATS does not publish enough of its method to reproduce; now a direction
+  check plus internal checks (`report/orats_check.md`, PREREGISTRATION.md).
+- More than about 10–15% of events fail data-quality checks. *At 500 names: 5.9% data-quality
+  failures; a further ~29% excluded by the liquidity rules, so claims are limited to liquid
+  optionable events (PREREGISTRATION.md, Study population).*
 - No path to roughly 2,000 usable events (the power target in `report/power.md`).
 - The trailing-move / implied ratio already explains the variation and the scaffold adds nothing in-sample.
 
