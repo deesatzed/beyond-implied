@@ -7,7 +7,7 @@ information about the *size* of stock moves beyond the option market's own forec
 and it can tell when to abstain. It predicts variance, not direction, and every prediction is written
 to a hash-chained ledger before its outcome exists.
 
-> **Status (2026-10-16): data test passed; pre-registration not yet frozen.** No forecast has been
+> **Status (2026-10-17): data test at 500 names done, one gate criterion missed (decision pending); pre-registration not yet frozen.** No forecast has been
 > evaluated. What exists so far is the data pipeline, a data-quality check, and a power analysis.
 > This is a forecasting study. It places no trades and is not investment advice.
 
@@ -15,16 +15,16 @@ to a hash-chained ledger before its outcome exists.
 
 | | |
 | --- | --- |
-| Phase 2 data test | **Go**, with one criterion marginally missed ([report/data_test.md](report/data_test.md)) |
-| Events (100 large-cap names, 13 seasons since mid-2023) | 1,307 announcements; 1,086 usable |
-| Report timing without looking at the outcome | 99 of 100 names; the implied-volatility-collapse rule agrees with known timing on 96.1% of events ([report/timing_iv.md](report/timing_iv.md)) |
-| Unusable share | 16.9% against a 15% criterion, mostly straddle spreads wider than 25%; recorded as a miss, not redefined |
+| Phase 2 data test | 500 names: power target met, unusable-share criterion failed (35.1%); decision pending ([report/data_test.md](report/data_test.md)) |
+| Events (500 largest names, 13 seasons since mid-2023) | 6,390 announcements; 4,148 usable |
+| Report timing without looking at the outcome | 484 of 500 names; the implied-volatility-collapse rule agrees with known timing on 93.8% of events ([report/timing_iv.md](report/timing_iv.md)) |
+| Unusable share | 35.1% against a 15% criterion: 5.9% label-quality failures, the rest the liquidity rules; not redefined |
 | Power for the primary test | 93% at a 5% effect with 500 names × 13 seasons ([report/power.md](report/power.md)) |
 | Forward collection | Option snapshots every trading day after the close since 2026-10-15 |
 
-Early descriptive picture, not a test of anything: large-cap implied moves were close to fair on
-average (realized/implied ≈ 1.0), seasons swung between 0.70 and 1.23, and a one-day straddle bought
-at the ask and sold at the bid lost money in most seasons.
+Early descriptive picture, not a test of anything: across 500 names, realized moves fell short of
+implied moves in every season (0.73–0.99), and a one-day straddle bought at the ask and sold at the
+bid lost money in every season.
 
 **Next:** expand to ~500 names, freeze the pre-registration (tag `prereg-v1`), then run baselines on
 training seasons and evaluate once on held-out seasons. Target for v1: 2026-12-01.

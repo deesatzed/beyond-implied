@@ -1,71 +1,106 @@
 # Phase 2 data test
 
-Rebuilt 2026-10-16 on the Mac Mini with `bi phase2 --start 2023-07-01 --end 2026-10-14 --names 100`,
-after adding the IV-collapse timing fallback (`report/timing_iv.md`). Universe: the 100 largest names
-with ≥ 8 announcements since mid-2023. Raw vendor data stays local; this file holds derived statistics.
-Tables: `report/data_test/seasons.csv`, `report/data_test/real_params.json`.
+Run 2026-10-16/17 on the Mac Mini: `bi timing-iv --names 500`, then `bi phase2 --names 500`
+(2023-07-01 to 2026-10-14). Universe: the 500 largest names with ≥ 8 announcements since mid-2023.
+Raw vendor data stays local; this file holds derived statistics. Tables: `report/data_test/seasons.csv`,
+`report/data_test/real_params.json`. The 100-name run of 2026-10-16 is kept in
+`report/data_test/100names/`.
 
-## Decision: GO, with one criterion marginally missed
+## Decision: pending. One gate criterion clearly missed
 
-| Gate (GOAL.md / BUILD.md) | Result | Status |
+| Gate (GOAL.md / BUILD.md) | Result at 500 names | Status |
 | --- | --- | --- |
 | Calendar complete | 850 of 850 trading days | Pass |
-| Outcome-free timing coverage ≥ 85% of names | 99 of 100 names; 1,233 of 1,307 announcements | Pass |
-| Unusable share ≤ 10–15% | 16.9% (221 of 1,307): 74 with no timing (5.7%), 147 failing filters (11.2%) | **Marginal miss** |
-| Season averages vs ORATS | 12-quarter pattern matches; Jan–Feb 2026 does not | Partial |
-| Path to ~2,000 usable events | 1,086 usable from 100 names; ~5,400 projected at 500 names | Pass |
+| Outcome-free timing | 484 of 500 names have events built; 338 with recorded or habitual timing, 146 timed by the IV rule only. 349 of 6,390 announcements (5.5%) left untimed | Pass |
+| IV timing rule holds at scale | 93.8% agreement, 85.1% coverage (96.1% and 94.5% at 100 names) | Pass |
+| Unusable share ≤ 10–15% | **35.1%** (2,242 of 6,390) | **Fail** |
+| Season averages vs ORATS | Jan–Feb 2026 still does not match | Unresolved |
+| Path to ~2,000 usable events | 4,148 usable over 556 announcement dates | Pass |
 
-**On the 16.9%:** 140 of the 147 filtered events fail only the ≤ 25% straddle-spread rule, and
-they cluster in 2025–2026 as spreads widened. These events are excluded by an explicit rule, not
-mislabeled, so the criterion's purpose (trustworthy labels) holds; the cost is sample size, and the
-sample remains far above the power target. I am not relaxing the spread rule a second time. The
-miss is recorded here and in the pre-registration rather than redefined away.
+### Why 35.1% are unusable
+
+| Reason (an event can have several) | Events |
+| --- | --- |
+| No outcome-free timing | 349 |
+| Pipeline failure (no event or stock data) | 31 |
+| Straddle spread > 25% of premium | 1,588 (1,156 for this reason alone) |
+| Option volume < 300 contracts | 624 (244 alone; 377 together with a wide spread) |
+| Zero bid on a straddle leg | 106 |
+| Price < $10 | 103 |
+| Invariant errors | 0 |
+
+Label-quality failures (no timing, pipeline errors, invariant errors) are 380 events, **5.9%**. The
+rest, about 29%, are excluded by the pre-registered liquidity rules: wide spreads and thin volume.
+Exclusion rises steeply as companies get smaller. By market-cap quintile, from largest to smallest:
+12%, 26%, 32%, 36%, 46%.
+
+**What this means.** The criterion was written to protect label quality, and on that reading it
+passes. But it is stated as a plain unusable share, and on that reading it fails by a wide margin. I
+have not redefined it. Three ways forward, for a decision before the Phase 3 freeze:
+
+1. **Define the study population as liquid optionable events.** Keep the 25% spread and 300-contract
+   rules, report the 35.1% openly, and limit every claim to that population. These rules use only
+   pre-event information, so they do not select on the outcome. They do tilt the sample toward larger
+   names.
+2. **Shrink the universe** to the largest ~300 names, where exclusion is lower, and accept fewer events.
+3. **Stop**, as GOAL.md's stop rule reads literally.
+
+Option 1 keeps the most power and does not move a threshold. But it reinterprets a stop criterion,
+so if chosen it must be written into PREREGISTRATION.md as a change, with this table as the reason.
 
 ## Timing sources
 
-| Source | Events | Unusable after filters |
-| --- | --- | --- |
-| Recorded on the calendar | 13 | 15.4% |
-| Company's habitual timing | 750 | 12.8% |
-| IV-collapse rule (validated 96.1%) | 470 | 10.4% |
-| No timing (excluded) | 74 | — |
+| Source | Events built |
+| --- | --- |
+| Company's habitual timing | 4,279 |
+| IV-collapse rule | 1,637 |
+| Recorded on the calendar | 94 |
+| No timing (excluded) | 349 |
 
-The outcome-based gap rule (diagnostic only, never used) agreed with the timing used on 76.2% of
-events, consistent with it selecting on the larger move.
+Habitual timing matched recorded timing on 74 of 74 checks. The outcome-based gap rule (diagnostic
+only, never used) agreed with the timing used on 75.0% of events.
 
 ## By season (usable events)
 
 | Season | Built | Usable | Implied (event) | Realized | Realized / implied | Win rate | Straddle 1-day (mid) | Straddle 1-day (exec) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2023Q3 | 92 | 89 | 4.3% | 4.7% | 1.07 | 48% | +10.9% | +2.8% |
-| 2023Q4 | 92 | 89 | 4.2% | 4.9% | 1.15 | 49% | +14.5% | +5.4% |
-| 2024Q1 | 88 | 86 | 5.2% | 6.3% | 1.23 | 49% | +12.8% | +1.7% |
-| 2024Q2 | 95 | 92 | 5.2% | 5.0% | 0.95 | 49% | −4.2% | −16.3% |
-| 2024Q3 | 97 | 92 | 5.3% | 5.2% | 0.95 | 47% | +0.2% | −14.2% |
-| 2024Q4 | 95 | 86 | 5.2% | 5.5% | 1.04 | 41% | +2.7% | −9.0% |
-| 2025Q1 | 96 | 78 | 5.4% | 5.0% | 0.92 | 45% | −4.8% | −16.2% |
-| 2025Q2 | 90 | 70 | 5.4% | 3.9% | 0.70 | 23% | −22.3% | −32.2% |
-| 2025Q3 | 96 | 80 | 5.0% | 5.7% | 1.13 | 43% | +7.7% | −2.3% |
-| 2025Q4 | 96 | 83 | 5.1% | 4.1% | 0.77 | 33% | −13.7% | −23.7% |
-| 2026Q1 | 97 | 76 | 5.1% | 5.2% | 1.02 | 47% | −2.6% | −14.4% |
-| 2026Q2 | 96 | 82 | 5.5% | 6.0% | 1.07 | 46% | +6.7% | −5.3% |
-| 2026Q3 | 93 | 74 | 5.8% | 6.2% | 1.02 | 45% | +5.3% | −6.6% |
-| 2026Q4 (partial) | 10 | 9 | 3.4% | 3.0% | 0.89 | 44% | −2.7% | −14.8% |
+| 2023Q3 | 449 | 364 | 4.5% | 4.7% | 0.95 | 42% | +3.2% | −7.2% |
+| 2023Q4 | 457 | 362 | 4.7% | 4.6% | 0.88 | 40% | +3.5% | −7.2% |
+| 2024Q1 | 449 | 379 | 5.4% | 5.5% | 0.98 | 43% | +7.7% | −6.9% |
+| 2024Q2 | 460 | 377 | 5.6% | 5.0% | 0.85 | 36% | −2.7% | −18.1% |
+| 2024Q3 | 463 | 351 | 6.0% | 5.8% | 0.93 | 42% | +4.5% | −12.3% |
+| 2024Q4 | 469 | 353 | 5.8% | 6.1% | 0.98 | 40% | +4.4% | −9.6% |
+| 2025Q1 | 460 | 304 | 6.2% | 5.5% | 0.87 | 38% | −3.1% | −18.4% |
+| 2025Q2 | 451 | 244 | 6.0% | 4.8% | 0.73 | 28% | −13.4% | −27.0% |
+| 2025Q3 | 470 | 259 | 6.2% | 6.4% | 0.99 | 39% | +4.3% | −7.8% |
+| 2025Q4 | 467 | 286 | 6.2% | 5.2% | 0.78 | 32% | −7.4% | −21.3% |
+| 2026Q1 | 468 | 296 | 6.2% | 5.7% | 0.87 | 40% | −1.9% | −17.2% |
+| 2026Q2 | 471 | 306 | 6.4% | 6.4% | 0.95 | 40% | +5.2% | −10.6% |
+| 2026Q3 | 460 | 254 | 6.8% | 6.0% | 0.81 | 33% | −4.1% | −19.1% |
+| 2026Q4 (partial) | 16 | 13 | 4.0% | 3.9% | 0.97 | 46% | −2.6% | −15.7% |
 
 Implied (event) strips base volatility using two expiries. Win = realized move above the event-implied
 move. Straddle returns hold the pre-event ATM straddle for one day: mid to mid, and pre-event ask to
-post-event bid.
+post-event bid. With 10% as the spread cut for P&L, the executable return is negative in 13 of 14
+seasons; the exception is 2026Q2 (+1.7%, 102 events).
 
-**Reading it:** with nearly twice the events, the picture from the 59-name run holds. Large-cap
-implied moves are close to fair (realized/implied ≈ 1.0 over 13 seasons), executable one-day
-straddles lose in most seasons, and seasons rotate between regimes (0.70 to 1.23). 110 events
-(about 9%) have an FOMC statement or CPI release in the event window; gate G8 will abstain on them.
+**Reading it:** at 500 names, realized moves fell short of implied moves in every season
+(0.73–0.99), unlike the top 100 names, which averaged close to 1.0. Win rates are 28–46%, and an
+executable one-day straddle lost money in every season. This is descriptive only; nothing has been
+tested. 2,018 events carry the I4 warning: the first expiry is far from the event, which is common for
+names with only monthly options. That makes the simple implied move overstate the event move. The
+two-expiry event estimate is meant to correct for this. H1 uses the event estimate, and results will
+be reported split by this warning.
 
-**ORATS check:** unchanged. The 12-quarter average is close to ORATS's ≈ −2%; the Jan–Feb 2026 season
-(+45% at ORATS) shows −2.6% here. Re-checked with the 500-name universe.
+**ORATS check: still unresolved.** For the season ending February 2026, ORATS reported straddle
+returns of about +45%. Here, 2026Q1 shows −1.9% (mid) at 500 names and −2.6% at 100 names. The
+12-quarter level roughly matches ORATS's ≈ −2%. A gap this size in one season suggests ORATS defines
+the season, entry and exit times or universe differently from this pipeline. I have not yet confirmed
+which. This is to be resolved against ORATS's published method before the Phase 3 freeze. Until then,
+the pipeline's season P&L is not claimed to match an outside benchmark.
 
 ## Real-data parameters (for `bi power-real`)
 
-1,086 usable events over 382 announcement dates. Dispersion of log implied moves 0.47; median implied
-move 4.5%; realized/implied median 0.88, 90th percentile 2.00, 99th 3.53. Date effect 0.29 (now
-estimable with more same-day events). The power grid is re-run after the 500-name pull.
+4,148 usable events over 556 announcement dates (median 4 per date). Dispersion of log implied moves
+0.50; median implied move 5.5%; realized/implied median 0.76, 90th percentile 1.94, 99th 3.40.
+Date effect 0.46. Power is re-run with these parameters: `report/power.md`.

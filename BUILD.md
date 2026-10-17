@@ -86,6 +86,11 @@ over twelve quarters but not for the Jan–Feb 2026 season (large-cap universe, 
 100 names; the timing blocker is cleared. Unusable share 16.9% is a recorded marginal miss (wide
 spreads), not a label-quality failure.
 
+**Update 2026-10-17 (500 names): gate criterion failed, decision pending.** 4,148 usable events
+(power target met), but the unusable share is 35.1%. Label-quality failures are 5.9%; the rest is the
+liquidity rules, concentrated in smaller names. Phase 3 waits on the population decision
+(`report/data_test.md`) and the ORATS check.
+
 ---
 
 ## Phase 3 — Freeze the pre-registration (half day)

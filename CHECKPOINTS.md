@@ -4,6 +4,27 @@ Newest first. Each checkpoint has a matching git tag `checkpoint-YYYY-MM-DD`.
 
 ---
 
+## 2026-10-17 — 500-name pull: one gate criterion clearly missed
+
+- Overnight run (Fri 16:35 to Sat 02:51 ET): 6,390 announcements, 6,010 events built, **4,148 usable**
+  over 556 dates. That is about twice the power target.
+- Timing scales: 484 of 500 names covered; IV rule 93.8% agreement (96.1% at 100 names).
+- **Unusable share 35.1%, failing the 10–15% criterion.** Label-quality failures are only 5.9%; the
+  rest is the pre-registered liquidity rules (spread > 25%, volume < 300), concentrated in smaller
+  names. Not redefined; three options are set out in `report/data_test.md` for a decision before the
+  freeze.
+- At 500 names, realized moves fell short of implied in every season (0.73–0.99), and the executable
+  one-day straddle lost money in every season.
+- ORATS Jan–Feb 2026 mismatch persists at 500 names (−1.9% vs ≈ +45%); likely a definitional
+  difference, not yet confirmed.
+- Daily snapshot Fri: 13 of 14 names (PAC has no Cboe chain). Dashboard refresh moved into this
+  session after the scheduled-task version failed silently.
+
+**Decisions needed before Phase 3:** the population definition (option 1, 2 or 3); how the ORATS gap
+is resolved.
+
+---
+
 ## 2026-10-16 (morning) — Timing fixed; 100-name rebuild; C1 and G8 added
 
 - IV-collapse timing validated (96.1% agreement on 763 reference events, 94.5% classified; flat
