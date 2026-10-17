@@ -156,7 +156,7 @@ def results(root: Path) -> dict:
                                 "n": int(m.group(3))}
     dt_md = rep / "data_test.md"
     if dt_md.exists():
-        m = re.search(r"## Decision: (.+)", dt_md.read_text())
+        m = re.search(r"## Decision[^:\n]*: (.+)", dt_md.read_text())
         out["decision"] = m.group(1).strip() if m else None
     pr = rep / "power" / "power_real.csv"
     if pr.exists():
