@@ -26,7 +26,7 @@ Early descriptive picture, not a test of anything: across 500 names, realized mo
 implied moves in every season (0.73–0.99), and a one-day straddle bought at the ask and sold at the
 bid lost money in every season.
 
-**Next:** expand to ~500 names, freeze the pre-registration (tag `prereg-v1`), then run baselines on
+**Next:** decide the study population and resolve the ORATS check, then freeze the pre-registration (tag `prereg-v1`), then run baselines on
 training seasons and evaluate once on held-out seasons. Target for v1: 2026-12-01.
 Progress is logged in [CHECKPOINTS.md](CHECKPOINTS.md); the plan with gates is [BUILD.md](BUILD.md).
 
