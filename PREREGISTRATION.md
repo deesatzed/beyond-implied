@@ -91,6 +91,10 @@ instead of being presented as the original intent.
 - For each scored season *s*, every quantity the model learns (coefficients, gate thresholds that
   are fit, calibration constants) is estimated only from events in seasons before *s*. Season *s*
   is then predicted once. Nothing estimated on season *s* or later is ever used to predict *s*.
+- **Purge rule** *(decided 2026-10-18)*: training data for season *s* excludes every event whose
+  post-event close falls in *s* or later, for example a report on a quarter's last day whose outcome
+  lands in the next quarter. Trailing-move features for a scored event use only outcomes known before
+  its pre-event close.
 - Minimum training history: 2 seasons. Scored seasons: from 2024Q1 to 2026Q3 (11 seasons), subject
   to the trailing-move requirement below.
 - The trailing-move baseline needs ≥ 4 prior events per name. Earnings dates and stock closes before
