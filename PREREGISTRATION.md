@@ -5,11 +5,20 @@ and tagging `prereg-v1`. Any change after that is a new version with its own tag
 
 ## Hypotheses
 
-- **H1 (primary, earnings arena).** In the regression
-  `|r_i| = a + b_model · F_model,i + b_imp · IM_i + b_tr · F_trailing,i + e_i`,
-  where `|r_i|` is the realized absolute move, `F_model` the scaffold forecast, `IM` the implied move
-  and `F_trailing` the trailing mean absolute move, `b_model > 0` at the 5% level with standard
-  errors clustered by announcement date, on walk-forward out-of-sample forecasts (Evaluation design).
+- **H1 (primary, earnings arena).** In the regression, scaled by each event's implied move,
+  `|r_i| / IM_i = a + b_model · F_model,i / IM_i + b_tr · F_trailing,i / IM_i + e_i`,
+  `b_model > 0` at the 5% level, with standard errors clustered by announcement date, on walk-forward
+  out-of-sample forecasts (Evaluation design). The terms are:
+  - `|r_i|`: the realized absolute move;
+  - `IM_i`: the implied move;
+  - `F_model`: the scaffold forecast;
+  - `F_trailing`: the trailing mean absolute move.
+
+  The intercept carries the implied move's own contribution: if the market's forecast were all there
+  is, `a` would absorb the scaled outcome and both slopes would be zero.
+  *Changed 2026-10-18:* the test is scaled by the implied move so that a few very volatile names cannot
+  dominate it. The unscaled version is reported as a robustness check, with the implied move as a
+  regressor.
   *Narrowed 2026-10-15 (docs/prior-art.md):* that trailing moves add information beyond the implied
   move is already published, so the benchmark includes both.
 - **H2 (secondary).** Area under the risk-coverage curve (QLIKE loss) for the scaffold with gates is lower
