@@ -60,3 +60,12 @@ names ≥ $2B on 2025-10-22, 2026-07-23 and 2026-04-29). Consequences:
 
 - Christensen & Prabhala (1998) and the implied-vs-realized bias literature (classic; not opened).
 - Analyst-coverage and earnings-surprise predictability (post-earnings drift) beyond entry 2.
+
+## Added 2026-10-18 — time-series foundation models
+
+| # | Source | What it is | Finding | Use here |
+| --- | --- | --- | --- | --- |
+| 14 | [Brini 2026, arXiv 2607.05291](https://arxiv.org/abs/2607.05291) | 9 zero-shot TSFMs vs 8 econometric models, realized volatility, 50 assets, h = 1/5/22 | Only TTM beats Log-HAR at all horizons (~1.3–1.8%); daily gain mostly calibration; TTM + Log-HAR average in the MCS for 98–100% of assets | C2 baseline and prior |
+| 15 | [Toto 2.0 / FnF (Datadog)](https://datadoghq.com/blog/ai/toto-2/) | TSFM family plus a per-window weighted ensemble | FnF #1 on GIFT-Eval; Toto family 39%, Chronos-2 32% of average weight; Apache-2.0 weights | C2 pool and combination idea |
+| 16 | [Synapse (TMLR 2026)](https://arxiv.org/abs/2511.05460) | Adaptive, context-dependent weighting of TSFMs | Beats static ensembles and single TSFMs (abstract claim) | C2 meta-learner design |
+| 17 | [CastStar](https://huggingface.co/USTC-AGI/CastStar) | Agentic ensemble over six TSFMs | GIFT-Eval submission; pool listed, gating not documented | C2 pool reference |

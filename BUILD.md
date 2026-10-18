@@ -205,3 +205,9 @@ distribution, and numerical inference combines them into a predictive distributi
 Ablations test whether outside-the-market factors and the network structure add value. C1 is frozen
 with v1 and logs forward from the freeze, on earnings events plus a weekly ETF panel. It is scored
 forward only. Spec: `src/beyond_implied/challengers/elicited_net/GOAL.md`.
+
+**Second challenger (C2): time-series foundation-model ensemble** (added 2026-10-18). TTM,
+Chronos-2, TimesFM 2.5, TiRex and a small Toto 2.0, run zero-shot, plus Log-HAR and implied volatility,
+combined equal-weight and with a walk-forward meta-learner. It runs on the ETF panel and the index
+arena, not on one-day earnings moves, and serves as a control for C1's panel forecasts. Spec:
+`src/beyond_implied/challengers/tsfm_ensemble/GOAL.md`.
