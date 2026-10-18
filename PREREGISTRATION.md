@@ -83,6 +83,12 @@ instead of being presented as the original intent.
   at τ = 0.90, reported next to breach rates, so that needlessly wide bounds are penalized. Secondary metric only.
 - Decision: risk-at-coverage curve; hypothetical straddle P&L net of half-spread, judged by skew,
   expected shortfall (worst 1%), and max drawdown.
+- Straddle P&L views *(two views, decided 2026-10-18)*. Illustrative only; no trading.
+  1. One-day hold: buy at the pre-event ask, sell at the post-event bid.
+  2. Hold to the first expiry: buy at the pre-event ask, value at expiry as |S_T − K| (cash
+     settlement assumed; early exercise ignored).
+
+  Both use the ≤ 10% spread subset and are reported side by side. Neither enters H1.
 
 ## Evaluation design: walk-forward over all seasons
 
