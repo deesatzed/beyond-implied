@@ -66,6 +66,13 @@ So the base case is a small gain at best, and the combination is the strongest c
 - **Unknowns:** no finance or volatility evaluation has been published, and the training cutoff is not
   stated. Pin the exact checkpoint revision at the freeze.
 
+**Installed 2026-10-18** on the Mac: `timestral==1.0.0` from GitHub commit `a534bdb`, with torch 2.14.1.
+Smoke test (`scripts/timestral_smoke.py`, exploratory, pre-freeze): AAPL daily absolute returns,
+825-day context, 21-day horizon. Weights load in 8.7 s and the forecast takes 0.08 s on the Mac's CPU.
+The mean forecast median was 0.82% against 0.83% realized; the 21-day trailing mean was 1.16%.
+90% of realized days fell inside the 10–90% band. One series and one window: this shows the
+plumbing works, not skill.
+
 ## Contamination and licenses
 
 - TSFM pretraining corpora may include 2023–2026 market series. Retrospective panel results are
