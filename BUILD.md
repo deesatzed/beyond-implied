@@ -198,7 +198,10 @@ Sections: `forecasters/`, `gates/`, `ledger/`
 
 **Gate:** no change reaches the champion without a season it never saw.
 
-**First challenger (C1): AI-elicited probabilistic network.** An LLM proposes nodes, distributions,
-medians and ranges; a person reviews and approves; the spec is frozen and scored on forward events
-only (after the eliciting model's training cutoff). Spec format and validator are built:
-`src/beyond_implied/challengers/elicited_net/` (GOAL.md, spec_schema.md, spec.py).
+**First challenger (C1): open-world AI-elicited expert system** (revised 2026-10-17). For each
+instrument and origin, an LLM names any factors it judges to drive volatility: company, sector,
+supply chain, macro, policy, weather, geopolitical, strategic. Each factor gets a state and effect
+distribution, and numerical inference combines them into a predictive distribution of move size.
+Ablations test whether outside-the-market factors and the network structure add value. C1 is frozen
+with v1 and logs forward from the freeze, on earnings events plus a weekly ETF panel. It is scored
+forward only. Spec: `src/beyond_implied/challengers/elicited_net/GOAL.md`.

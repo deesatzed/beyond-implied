@@ -1,70 +1,148 @@
-# GOAL — Challenger C1: AI-elicited probabilistic network
+# GOAL — Challenger C1: open-world AI-elicited expert system (ESS)
 
-Status: **specified, not built.** Runs only after v1 is frozen (BUILD.md, Phase 9).
+Status: **specified, not built.** Revised 2026-10-17 from a fixed-input network to an open-world one.
+The fixed-input version is kept as ablation C1-closed (below). C1 is pre-registered and frozen
+alongside v1, then logs forward predictions from the freeze onward. Its promotion test is the
+Phase 9 rule in BUILD.md.
 
 ## Question
 
-Can a probabilistic network whose structure, distributions, medians and ranges are proposed by an
-LLM and approved by a person forecast earnings-move size better than the v1 champion, given the same
-pre-event inputs?
+For a given instrument and forecast origin, an LLM can name any factor it judges to drive that
+instrument's volatility: company-specific, sector, supply chain, macro, policy and political,
+legal, weather and climate, geopolitical, or strategic (game-theoretic). Each factor becomes a
+node with a probability distribution over its state and over its effect on the move. Numerical
+inference combines the nodes into a predictive distribution of move size.
 
-## Why it is a challenger, not part of v1
+**Does that forecast carry information about realized move size beyond the option market's
+implied move and the v1 champion?** Direction is never forecast.
 
-- An LLM can produce a precisely computed posterior for the wrong model. A person must review the
-  structure before it is used, and the data must decide whether it adds anything.
-- LLMs may already know past outcomes. This challenger is scored **only on events after the eliciting
-  model's training cutoff**, logged to the ledger before each announcement. Retrospective seasons are
-  never used to score it.
+The node list is not fixed in advance. Which factors matter, and how much, is the model's job for
+each instrument and date. Nothing in this file names required factors; examples elsewhere are
+illustrations only.
 
-## How it works
+## Units forecast
 
-1. **Elicit.** An LLM is given the input catalogue (below) and the target, and asked for a network
-   spec in the format of `spec_schema.md`: nodes, units, distribution family, median, plausible range,
-   parents, and a one-line rationale per node. The prompt, model ID and response are saved verbatim.
-2. **Validate.** `spec.py` rejects any spec that names an outcome or post-event field, has a median
-   outside its range, a cycle, an unknown parent, an unknown input, or missing units.
-3. **Review.** A person edits and approves the spec. Every change from the LLM draft is kept as a diff
-   with a reason. The approved spec is the one evaluated.
-4. **Freeze.** The approved spec's SHA-256, the prompt, the model ID and its stated training cutoff go
-   into the ledger as a `prereg` record before the evaluation season starts.
-5. **Fit.** Node parameters are updated from training seasons only (priors from the spec, likelihood
-   from data). The spec's structure does not change after the freeze.
-6. **Forecast and score.** For each forward event: predictive median and 80% interval of the absolute
-   move, written to the ledger before the announcement. Scored with the v1 rules: encompassing over the
-   champion (implied move + trailing move + champion forecast as benchmark), QLIKE, PIT, interval
-   coverage, and risk at matched coverage.
-7. **Promote or reject.** Replaces the champion only if it wins on the pre-registered metric over a
-   full unseen season. Either way, the result is published.
+1. **Earnings events** (primary). Every population event (PREREGISTRATION.md, Study population)
+   reporting after the freeze. Target: the absolute one-day event move. This reuses the v1
+   pipeline, the daily snapshots and the scoring rules. It gives about 10–30 forecasts per trading
+   day in season.
+2. **Non-earnings panel** (secondary). A frozen list of liquid optionable ETFs covering sectors,
+   commodities, rates and currencies, chosen at the freeze by liquidity rules, not by topic.
+   Weekly origins. Target: realized volatility over the next 21 trading days, compared with
+   30-day implied volatility. This is where factors outside any single company carry the most
+   weight.
 
-## Allowed inputs (all known before the pre-event close)
+## How one forecast is made
 
-`implied_move_event`, `implied_move_simple`, `f_trailing`, `trailing_n`, `past_move_kurtosis`,
-`market_cap`, `n_estimates`, `eps_forecast`, `rel_spread`, `vix`, `vix_vix3m`, `vvix`, `sector`,
-`timing`, `days_to_expiry_1`. Adding an input requires a test that proves it is pre-event.
+1. **Context snapshot.** At the origin, before the pre-event close, fetch the allowed context
+   sources (below). Store them verbatim, with retrieval time and SHA-256. The model sees only
+   this snapshot plus its own training knowledge.
+2. **Elicit.** The LLM gets the instrument, the origin, the horizon, the allowed pre-event market
+   inputs and the snapshot. It returns a spec in `spec_schema.md` (v2) form:
+   - nodes of any kind, each with a state distribution (median and range, or category
+     probabilities);
+   - for each node, its effect on the move as a multiplier distribution (median and range);
+   - parents, and a dependency group for nodes that share a cause, so correlated evidence is not
+     counted twice;
+   - for strategic nodes (game-theoretic), the players, their options and the payoff logic behind
+     the outcome distribution, in one or two lines each;
+   - a citation from the snapshot, or "prior knowledge", for every node.
+3. **Validate.** `spec.py` rejects outcome or post-event fields, medians outside ranges, cycles,
+   unknown parents, missing units, missing citations and unbounded effects.
+4. **Combine numerically.** Monte Carlo over node states, respecting parents and dependency
+   groups, produces the predictive distribution: median, 10th and 90th percentiles, and mean.
+   The LLM never states the final probability itself.
+5. **Seal.** The prompt, model ID, stated training cutoff, snapshot hash, raw response, validated
+   spec and predictive distribution are written to the ledger before the pre-event close.
+   Nothing is revised afterward.
 
-## Forbidden fields (outcomes or post-event)
+## Arms (pre-registered, run on the same units)
 
-`realized_move`, `post_close`, `eps`, `surprise_pct`, `straddle_ret_mid`, `straddle_ret_exec`,
-`timing_inferred`, anything computed from prices after the pre-event close.
+| Arm | What it sees and does | Question it answers |
+| --- | --- | --- |
+| C1-open | Full open-world ESS, anchored to the implied move (effects multiply the implied move) | The main question |
+| C1-open-unanchored | Same, but anchored to the trailing move; the implied move is hidden | Does it add information independently of the market? |
+| C1-closed | Nodes limited to market-internal inputs (the original fixed catalogue) | Do outside-the-market factors add value? (C1-open vs C1-closed) |
+| C1-direct | Same model and snapshot; asked for median and range directly, no network | Does the ESS structure add value over a plain LLM guess? |
 
-## Built
+## Scoring (same rules as v1)
 
-- `spec_schema.md` — the spec format.
-- `spec.py` — loader and validator.
-- `example_spec.json` — a hand-written example (not elicited), used by the tests.
+- **Primary:** the pooled encompassing regression of the realized move on the implied move, the
+  trailing move, the v1 champion and C1-open, normalized by the implied move and clustered by
+  announcement date (panel: clustered by week).
+- **Secondary:** QLIKE; quantile loss of the 10th and 90th percentiles; interval coverage; PIT;
+  risk at matched coverage.
+- **Ablation contrasts** as in the table.
+- **Reporting:** by node category (which kinds of factors the forecasts leaned on), and LLM cost
+  per scored forecast.
 
-## Build steps (Phase 9)
+## Contamination rules
 
-1. Write the elicitation prompt; store it in this folder; hash it.
-2. Run elicitation through OpenRouter (key in `.env`) with two different model families; keep both
-   drafts. Disagreement between them is reported.
-3. Human review and approval; diff recorded.
-4. Implement fitting (conjugate updates where possible; otherwise a small PyMC or NumPyro model) and
-   the predictive median/interval.
-5. Pre-register and freeze before the next season; run forward through the season.
+- **Forward only.** Every scored forecast is sealed before its outcome exists, and after the
+  eliciting model's stated training cutoff.
+- **Retrospective runs are exploratory, never scored.** The LLM may know how past events turned out.
+- **The snapshot is the only fresh information.** No live browsing during elicitation. Snapshot
+  sources are fixed at the freeze.
+- **Model version is pinned for the season.** A model change is a new challenger.
+
+## Allowed context sources (fixed at the freeze; access to be verified before it)
+
+Each source is fetched only through a recorded call at the origin:
+
+- company filings and press releases (SEC EDGAR);
+- scheduled macro and policy calendars (already in `config/macro_events.toml`);
+- official agency outlooks (for example NOAA, USDA, EIA);
+- prediction-market prices for scheduled events;
+- a headline feed restricted to items published before the origin.
+
+Sources that cannot be fetched reproducibly are excluded rather than approximated.
+
+## Allowed market inputs
+
+The v1 pre-event columns: `implied_move_event`, `implied_move_simple`, `f_trailing`, `trailing_n`,
+`past_move_kurtosis`, `market_cap`, `n_estimates`, `eps_forecast`, `rel_spread`, `vix`, `vix_vix3m`,
+`vvix`, `sector`, `timing`, `days_to_expiry_1`. Forbidden fields are as before: `realized_move`,
+`post_close`, `eps`, `surprise_pct`, straddle returns, `timing_inferred`, and anything computed after
+the pre-event close.
+
+## Human role
+
+Too many forecasts are made each day to review each one before sealing. The person reviews and
+freezes:
+
+- the prompt;
+- the snapshot sources;
+- the validator;
+- the combination code.
+
+A random 5% of sealed specs are audited after the fact for nonsense nodes, and the audit findings
+are published. Edits to individual forecasts are not allowed.
+
+## Cost and limits
+
+The rough estimate, to be confirmed in a dry run, is a few cents per forecast through OpenRouter
+(key in `.env`). There is a hard daily spend cap. If the cap is hit, the remaining events are marked
+NOT_FORECAST, never filled in later.
+
+## Promotion and expected timeline
+
+- Interim results go in the December 1 write-up, labeled underpowered.
+- The confirmatory read comes after the Jan–Feb 2027 season, under BUILD.md Phase 9.
+- C1 replaces the champion only if it wins the pre-registered test on forecasts it sealed before
+  the outcomes.
+
+## Build steps
+
+1. Spec v2 format and validator (`spec_schema.md`, `spec.py`), with tests for every rejection rule.
+2. Snapshot fetchers, each tested to refuse items timestamped after the origin.
+3. The Monte Carlo combiner, with tests on synthetic specs that have known answers.
+4. A dry run on 20 past events, labeled exploratory: cost, latency, failure rate.
+5. Freeze the prompt, sources, combiner, panel list and spend cap; hash them into the ledger with v1.
+6. Daily forward run after the snapshot job; seal before the close.
 
 ## Done when
 
-- [ ] Prompt, model IDs, cutoffs, drafts and approved spec are in the repo and hashed in the ledger.
-- [ ] Forward predictions for one full season are in the ledger, each written before its event.
-- [ ] Result published, promotion or not.
+- [ ] Prompt, sources, combiner and model ID are frozen and hashed in the ledger.
+- [ ] Forward forecasts for every arm are sealed daily, each before its outcome.
+- [ ] An interim report is published on December 1; the confirmatory report is published after
+      the Jan–Feb 2027 season, whatever the result.

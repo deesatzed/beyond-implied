@@ -4,6 +4,19 @@ Newest first. Each checkpoint has a matching git tag `checkpoint-YYYY-MM-DD`.
 
 ---
 
+## 2026-10-18 — C1 widened to an open-world ESS; kept inside Beyond Implied
+
+- Decided that the external-factor ESS lives inside Beyond Implied as challenger C1 rather than a new
+  project. It reuses the ledger, data, scoring and walk-forward discipline, and has the highest
+  chance of producing a credible result.
+- C1 now lets the LLM name any volatility driver per instrument and date, with no fixed list. The
+  LLM supplies node distributions; numerical inference combines them. Four pre-registered arms:
+  open (anchored), open (unanchored), closed (market inputs only), and direct LLM guess.
+- Forward only, from the freeze. Interim result on Dec 1, confirmatory after the Jan–Feb 2027
+  season.
+
+---
+
 ## 2026-10-17 (afternoon) — Decisions: liquid population, walk-forward evaluation, ORATS resolved
 
 - **Population (1A):** claims are limited to earnings events with liquid listed options. The
