@@ -79,6 +79,8 @@ instead of being presented as the original intent.
 
 - Second order: QLIKE, Mincer–Zarnowitz, encompassing regression, Model Confidence Set.
 - Third order: PIT uniformity, Christoffersen conditional coverage at 5% and 1%.
+- Upper-bound scoring *(added 2026-10-18)*: quantile (pinball) loss of the 90% conformal upper bound
+  at τ = 0.90, reported next to breach rates, so that needlessly wide bounds are penalized. Secondary metric only.
 - Decision: risk-at-coverage curve; hypothetical straddle P&L net of half-spread, judged by skew,
   expected shortfall (worst 1%), and max drawdown.
 
