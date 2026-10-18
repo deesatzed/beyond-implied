@@ -30,7 +30,8 @@ So the base case is a small gain at best, and the combination is the strongest c
 - **Target:** realized volatility over the next 21 trading days, from daily OHLC (Garman–Klass).
   This is a daily-range proxy, named as such and not compared with 5-minute-RV results.
 - **Pool:**
-  - TTM, Chronos-2, TimesFM 2.5, TiRex and a small Toto 2.0, all zero-shot, run locally on the Mac;
+  - TTM, Chronos-2, TimesFM 2.5, TiRex, a small Toto 2.0 and Timestral-209M (added 2026-10-18), all
+    zero-shot, run locally on the Mac;
   - Log-HAR and HAR as the econometric members;
   - 30-day implied volatility as a member, not only as the benchmark.
 - **Combinations, each pre-registered:**
@@ -42,6 +43,28 @@ So the base case is a small gain at best, and the combination is the strongest c
   Diebold–Mariano tests against Log-HAR and against implied volatility, clustered by week.
 - **C1 link:** C1-open's panel forecasts are scored with the C2 ensemble as a control. The claim
   "outside-the-market factors add information" has to beat this pool, not only implied volatility.
+
+## Timestral-209M (Mistral, released 2026-10-15)
+
+- **Why include it:**
+  - It reports first place on GIFT-Eval, TIME and fev-bench. These are self-reported, and the tech
+    report is not out yet.
+  - It outputs 21 quantiles, which suits quantile and CRPS scoring.
+  - It runs on CPU; Mistral reports about 140 ms per forecast on an 8-thread server CPU.
+- **Its most useful feature here is known-future covariates.** Scheduled event calendars can be
+  passed in: FOMC and CPI dates (`config/macro_events.toml`) and the earnings dates of a fund's
+  largest holdings. The model can then shape the volatility path around those days.
+- **Contamination is lower than for most TSFMs.** Pretraining is "purely synthetic"; post-training
+  uses an undisclosed mix of real and synthetic data. That is lower contamination risk than models
+  pretrained on real market series, but not zero. Retrospective results stay exploratory.
+- **Exploratory earnings experiment (not a confirmatory arm).** Feed each stock's daily absolute-return
+  series with an "earnings day" known-future covariate and read the event-day quantiles. Compare
+  them with the implied move. There are only about 12 past events per stock as in-context examples,
+  so expectations are low.
+- **License:** modified MIT. Free use is allowed when the company's monthly revenue is under
+  $20 million, which covers this project; attribution is required.
+- **Unknowns:** no finance or volatility evaluation has been published, and the training cutoff is not
+  stated. Pin the exact checkpoint revision at the freeze.
 
 ## Contamination and licenses
 
